@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pré-cadastro de Aluno / Atleta — INEC & NEC</title>
+    <meta name="description"
+        content="Formulário de pré-cadastro de alunos e atletas do Instituto Nosso Esporte Clube (INEC) e Nosso Esporte Clube (NEC).">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- ==================== HEADER ==================== -->
+    <header class="header">
+        <div class="header-inner">
+            <div class="header-logos">
+                <img src="../img/LogoINEC.png" alt="INEC Logo" class="header-logo">
+                <img src="../img/logoNEC.png" alt="NEC Logo" class="header-logo">
+            </div>
+            <div class="header-text">
+                <h1>Pré-cadastro do Atleta</h1>
+                <p class="header-subtitle">Preencha os dados abaixo para solicitar o cadastro. Após o envio, as
+                    informações passarão por análise antes da aprovação final.</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== MAIN FORM ==================== -->
+    <main class="main-container">
+        <form id="form-precadastro" onsubmit="return false;" novalidate>
+
+            <!-- ===== Foto ===== -->
+            <section class="form-card">
+                <div class="card-header">
+                    <span class="card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z">
+                            </path>
+                            <circle cx="12" cy="13" r="4"></circle>
+                        </svg>
+                    </span>
+                    <h2 class="card-title">Foto do Atleta</h2>
+                </div>
+                <div class="photo-upload-area">
+                    <div class="photo-preview" id="photo-preview">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z">
+                            </path>
+                            <circle cx="12" cy="13" r="4"></circle>
+                        </svg>
+                        <span class="photo-placeholder-text">Clique para selecionar</span>
+                    </div>
+                    <input type="file" id="inp-foto" accept="image/*" class="file-input-hidden"
+                        onchange="handlePhotoSelect(this)">
+                    <button type="button" class="btn btn-outline-sm"
+                        onclick="document.getElementById('inp-foto').click()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
+                        Escolher Foto
+                    </button>
+                    <span class="file-hint">JPG ou PNG, máx. 5MB</span>
+                    <span class="file-name" id="foto-file-name"></span>
+                </div>
+            </section>
+
+            <!-- ===== Dados do Atleta ===== -->
+            <section class="form-card">
+                <div class="card-header">
+                    <span class="card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
+                        </svg>
+                    </span>
+                    <h2 class="card-title">Dados do Atleta</h2>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label for="inp-nome">Nome Completo <span class="required">*</span></label>
+                        <input type="text" id="inp-nome" placeholder="Digite o nome completo do atleta" required>
+                        <span class="error-msg" id="err-nome"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="inp-data-nasc">Data de Nascimento <span class="required">*</span></label>
+                        <input type="text" id="inp-data-nasc" placeholder="dd/mm/aaaa" maxlength="10" required>
+                        <span class="error-msg" id="err-data-nasc"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="inp-cpf-atleta">CPF do Atleta <span class="required">*</span></label>
+                        <input type="text" id="inp-cpf-atleta" placeholder="000.000.000-00" maxlength="14" required>
+                        <span class="error-msg" id="err-cpf-atleta"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="inp-rg-atleta">RG do Atleta <span class="optional">(Opcional)</span></label>
+                        <input type="text" id="inp-rg-atleta" placeholder="00.000.000-0">
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== Dados do Responsável ===== -->
+            <section class="form-card">
+                <div class="card-header">
+                    <span class="card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                        </svg>
+                    </span>
+                    <h2 class="card-title">Dados do Responsável</h2>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label for="inp-nome-resp">Nome do Responsável <span class="required">*</span></label>
+                        <input type="text" id="inp-nome-resp" placeholder="Digite o nome completo do responsável"
+                            required>
+                        <span class="error-msg" id="err-nome-resp"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="inp-parentesco">Parentesco com Atleta <span class="required">*</span></label>
+                        <input type="text" id="inp-parentesco" placeholder="Ex: Pai, Mãe, Tutor" required>
+                        <span class="error-msg" id="err-parentesco"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="inp-cpf-resp">CPF do Responsável <span class="required">*</span></label>
+                        <input type="text" id="inp-cpf-resp" placeholder="000.000.000-00" maxlength="14" required>
+                        <span class="error-msg" id="err-cpf-resp"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="inp-email">E-mail <span class="required">*</span></label>
+                        <input type="email" id="inp-email" placeholder="email@exemplo.com" required>
+                        <span class="error-msg" id="err-email"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="inp-telefone">Telefone / WhatsApp <span class="required">*</span></label>
+                        <input type="text" id="inp-telefone" placeholder="(00) 00000-0000" maxlength="15" required>
+                        <span class="error-msg" id="err-telefone"></span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== Endereço ===== -->
+            <section class="form-card">
+                <div class="card-header">
+                    <span class="card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                            <circle cx="12" cy="10" r="3" />
+                        </svg>
+                    </span>
+                    <h2 class="card-title">Endereço</h2>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label for="inp-rua">Rua / Avenida <span class="required">*</span></label>
+                        <input type="text" id="inp-rua" placeholder="Digite o nome da rua ou avenida" required>
+                        <span class="error-msg" id="err-rua"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="inp-numero">Número <span class="required">*</span></label>
+                        <input type="text" id="inp-numero" placeholder="Nº" required>
+                        <span class="error-msg" id="err-numero"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="inp-bairro">Bairro <span class="required">*</span></label>
+                        <input type="text" id="inp-bairro" placeholder="Digite o bairro" required>
+                        <span class="error-msg" id="err-bairro"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="inp-cidade">Cidade <span class="required">*</span></label>
+                        <input type="text" id="inp-cidade" placeholder="Digite a cidade" required>
+                        <span class="error-msg" id="err-cidade"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="inp-cep">CEP <span class="required">*</span></label>
+                        <input type="text" id="inp-cep" placeholder="00000-000" maxlength="9" required>
+                        <span class="error-msg" id="err-cep"></span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== Período e Modalidades ===== -->
+            <section class="form-card">
+                <div class="card-header">
+                    <span class="card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 6 12 12 16 14" />
+                        </svg>
+                    </span>
+                    <h2 class="card-title">Período e Modalidades</h2>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="inp-periodo">Período <span class="required">*</span></label>
+                        <select id="inp-periodo" required>
+                            <option value="">Selecione...</option>
+                            <option value="Manhã">Manhã</option>
+                            <option value="Tarde">Tarde</option>
+                            <option value="Noite">Noite</option>
+                        </select>
+                        <span class="error-msg" id="err-periodo"></span>
+                    </div>
+                </div>
+                <div class="modalidades-section">
+                    <div class="modalidades-block">
+                        <h3 class="modalidades-title">INEC</h3>
+                        <div class="checkbox-grid" id="mod-inec"></div>
+                    </div>
+                    <div class="modalidades-block">
+                        <h3 class="modalidades-title">NEC</h3>
+                        <div class="checkbox-grid" id="mod-nec"></div>
+                    </div>
+                </div>
+                <span class="error-msg" id="err-modalidades"></span>
+            </section>
+
+            <!-- ===== Informações de Saúde ===== -->
+            <section class="form-card">
+                <div class="card-header">
+                    <span class="card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                        </svg>
+                    </span>
+                    <h2 class="card-title">Informações de Saúde</h2>
+                </div>
+                <div class="toggle-container">
+                    <span class="toggle-question">O atleta possui algum problema de saúde?</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="inp-tem-saude" onchange="toggleSaude()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="toggle-label-text" id="toggle-saude-text">Não</span>
+                </div>
+                <div class="saude-details" id="saude-details" style="display:none;">
+                    <div class="form-group full-width">
+                        <label for="inp-info-saude">Descreva a condição de saúde, alergia ou necessidade</label>
+                        <textarea id="inp-info-saude" placeholder="Ex: Alergia a dipirona, rinite alérgica..."
+                            rows="3"></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== Documentos ===== -->
+            <section class="form-card">
+                <div class="card-header">
+                    <span class="card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                            <line x1="16" y1="13" x2="8" y2="13" />
+                            <line x1="16" y1="17" x2="8" y2="17" />
+                            <polyline points="10 9 9 9 8 9" />
+                        </svg>
+                    </span>
+                    <h2 class="card-title">Documentos</h2>
+                </div>
+                <div class="documents-grid">
+                    <div class="doc-upload-card" id="doc-aluno-card">
+                        <div class="doc-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                            </svg>
+                        </div>
+                        <span class="doc-label">Documento do Atleta</span>
+                        <span class="doc-status" id="doc-aluno-status">Nenhum arquivo selecionado</span>
+                        <input type="file" id="inp-doc-aluno" accept="image/*,.pdf" class="file-input-hidden"
+                            onchange="handleDocSelect(this, 'aluno')">
+                        <button type="button" class="btn btn-outline-sm"
+                            onclick="document.getElementById('inp-doc-aluno').click()">Selecionar</button>
+                    </div>
+                    <div class="doc-upload-card" id="doc-resp-card">
+                        <div class="doc-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                            </svg>
+                        </div>
+                        <span class="doc-label">Documento do Responsável</span>
+                        <span class="doc-status" id="doc-resp-status">Nenhum arquivo selecionado</span>
+                        <input type="file" id="inp-doc-resp" accept="image/*,.pdf" class="file-input-hidden"
+                            onchange="handleDocSelect(this, 'resp')">
+                        <button type="button" class="btn btn-outline-sm"
+                            onclick="document.getElementById('inp-doc-resp').click()">Selecionar</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== Termos e Consentimento ===== -->
+            <section class="form-card">
+                <div class="card-header">
+                    <span class="card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        </svg>
+                    </span>
+                    <h2 class="card-title">Termos e Consentimento</h2>
+                </div>
+                <div class="terms-content">
+                    <div class="terms-text">
+                        <p>Ao enviar este formulário, declaro que:</p>
+                        <ul>
+                            <li>Os dados informados são verdadeiros e de minha responsabilidade;</li>
+                            <li>Autorizo o envio e armazenamento seguro das informações e documentos fornecidos;</li>
+                            <li>Entendo que o cadastro passará por <strong>análise e validação</strong> pela equipe
+                                responsável antes da aprovação final;</li>
+                            <li>Estou ciente de que poderei ser contatado para confirmação ou complementação dos dados.
+                            </li>
+                        </ul>
+                    </div>
+                    <label class="terms-checkbox">
+                        <input type="checkbox" id="inp-aceite" required>
+                        <span class="checkmark"></span>
+                        <span>Li e concordo com os termos acima <span class="required">*</span></span>
+                    </label>
+                    <span class="error-msg" id="err-aceite"></span>
+                </div>
+            </section>
+
+            <!-- ===== Ações ===== -->
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="limparFormulario()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <polyline points="1 4 1 10 7 10" />
+                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+                    </svg>
+                    Limpar
+                </button>
+                <button type="button" class="btn btn-primary" id="btn-enviar" onclick="enviarPreCadastro()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13" />
+                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg>
+                    Enviar Pré-cadastro
+                </button>
+            </div>
+        </form>
+    </main>
+
+    <!-- ==================== MODAL SUCESSO ==================== -->
+    <div class="modal-overlay" id="modal-sucesso">
+        <div class="modal-card">
+            <div class="modal-success-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                    <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+            </div>
+            <h2 class="modal-title">Pré-cadastro enviado com sucesso</h2>
+            <p class="modal-text">Os dados foram recebidos e serão analisados pela equipe responsável antes da validação
+                final.</p>
+            <div class="protocolo-box">
+                <span class="protocolo-label">Número de Protocolo</span>
+                <span class="protocolo-number" id="protocolo-number">PRE-20260304-00000</span>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline-modal" onclick="novoCadastro()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    Novo Cadastro
+                </button>
+                <button class="btn btn-primary-modal" onclick="fecharModal()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== LOADING OVERLAY ==================== -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Enviando pré-cadastro...</p>
+    </div>
+
+    <!-- ==================== TOAST ==================== -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
