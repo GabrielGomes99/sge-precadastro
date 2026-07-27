@@ -1,6 +1,7 @@
 // ==================== SUPABASE CONFIG ====================
 const SUPABASE_URL = 'https://yoqjelcixpbygwifwirm.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlvcWplbGNpeHBieWd3aWZ3aXJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIxMzUwMzIsImV4cCI6MjA4NzcxMTAzMn0.9pHR-q6MVNp2EPckhnpb7hkBHB2t8vhF1c9WUvBiR-s';
+const ENDPOINT_VALIDAR_ATLETA = `${SUPABASE_URL}/functions/v1/validar-atleta`;
 
 const { createClient } = supabase;
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -218,6 +219,23 @@ function validateCPF(cpf) {
     return true;
 }
 
+/**
+ * Strip non-digit characters from a CPF string. Returns 11 raw digits
+ * for "111.444.777-35" or "" for null/empty/non-string input.
+ *
+ * Preserva zeros à esquerda — "012.345.678-90" vira "01234567890"
+ * (relevante para CPFs válidos que começam com 0).
+ *
+ * Parity byte-a-byte com ``lookup-helpers.js#extrairDigitos`` usado
+ * pelo live portal: ``typeof s !== 'string' return ''``. Ambos os
+ * frontends mandam raw digits para a Edge Function para o payload
+ * bater com o que ``normalizarCpf`` produz no backend.
+ */
+function extrairDigitos(s) {
+    if (typeof s !== 'string') return '';
+    return s.replace(/\D/g, '');
+}
+
 function validateEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
@@ -258,13 +276,13 @@ function validateForm() {
     }
 
     // CPF validation
-    const cpfAtleta = document.getElementById('inp-cpf-atleta').value.trim();
+    const cpfAtleta = extrairDigitos(document.getElementById('inp-cpf-atleta').value);
     if (cpfAtleta && !validateCPF(cpfAtleta)) {
         setError('cpf-atleta', 'CPF inválido');
         valid = false;
     }
 
-    const cpfResp = document.getElementById('inp-cpf-resp').value.trim();
+    const cpfResp = extrairDigitos(document.getElementById('inp-cpf-resp').value);
     if (cpfResp && !validateCPF(cpfResp)) {
         setError('cpf-resp', 'CPF inválido');
         valid = false;
@@ -426,14 +444,14 @@ async function enviarPreCadastro() {
         const payload = {
             nome: getVal('inp-nome'),
             rg: getVal('inp-rg-atleta'),
-            cpf: getVal('inp-cpf-atleta'),
+            cpf: extrairDigitos(getVal('inp-cpf-atleta')),
             data_nascimento: dataNasc,
             idade: idade,
             categoria: categoria,
             endereco: endereco,
             nome_responsavel: getVal('inp-nome-resp'),
             parentesco: getVal('inp-parentesco'),
-            cpf_responsavel: getVal('inp-cpf-resp'),
+            cpf_responsavel: extrairDigitos(getVal('inp-cpf-resp')),
             email: getVal('inp-email'),
             telefone: getVal('inp-telefone'),
             problema_saude: infoSaude,
@@ -557,8 +575,8 @@ async function verificarCadastro() {
 
     clearErrors();
 
-    const cpfAtleta = cpfAtletaEl.value.trim();
-    const cpfResp = cpfRespEl.value.trim();
+    const cpfAtleta = extrairDigitos(cpfAtletaEl.value);
+    const cpfResp = extrairDigitos(cpfRespEl.value);
 
     let hasError = false;
     if (!cpfAtleta || !validateCPF(cpfAtleta)) {
@@ -576,18 +594,28 @@ async function verificarCadastro() {
     btn.classList.add('loading');
 
     try {
-        const { data, error } = await supabaseClient.functions.invoke('validar-atleta', {
-            body: {
-                action: 'consultar',
-                cpf_atleta: cpfAtleta,
-                cpf_responsavel: cpfResp,
+        const response = await fetch(ENDPOINT_VALIDAR_ATLETA, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                'apikey': SUPABASE_ANON_KEY,
+                'Content-Type': 'application/json',
             },
+            body: JSON.stringify({ action: 'consultar', cpf: cpfAtleta, cpf_responsavel: cpfResp }),
         });
-
-        if (error) {
-            console.error('validar-atleta error:', error);
-            showToast('Não foi possível verificar o cadastro agora. Tente novamente em instantes.', 'error');
-            return;
+        let data;
+        try {
+            data = await response.json();
+        } catch (_) {
+            // Resposta não-JSON é uma falha de parse do servidor, não um bug do cliente.
+            console.warn('validar-atleta: resposta não-JSON', response.status);
+            if (!response.ok) {
+                throw { __edge: true, status: response.status, body: { message: 'Resposta inválida do servidor' } };
+            }
+            throw { __edge: true, status: response.status, body: null };
+        }
+        if (!response.ok) {
+            throw { __edge: true, status: response.status, body: data };
         }
 
         // A Edge Function sempre responde com envelope 200/encontrado
@@ -625,9 +653,21 @@ async function verificarCadastro() {
 
         consultaState.estado = estado;
         ModalConsulta.show(estado, data || {});
-    } catch (err) {
-        console.error('verificarCadastro exception:', err);
-        showToast('Erro de conexão. Verifique sua internet e tente novamente.', 'error');
+    } catch (e) {
+        if (e && e.__edge) {
+            // A Edge Function retornou não-2xx ou uma resposta não-JSON.
+            let mensagem = 'Não foi possível verificar o cadastro agora. Tente novamente em instantes.';
+            if (e.body && typeof e.body.message === 'string') {
+                mensagem = e.body.message;
+            }
+            console.warn('validar-atleta: edge error', e.status, mensagem);
+            showToast(mensagem, 'error');
+        } else {
+            // Falha de rede: fetch rejeitou antes de receber uma resposta.
+            console.error('verificarCadastro connection failure:', e);
+            showToast('Erro de conexão. Verifique sua internet e tente novamente.', 'error');
+        }
+        return;
     } finally {
         btn.disabled = false;
         btn.classList.remove('loading');
