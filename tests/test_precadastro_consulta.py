@@ -491,3 +491,38 @@ process.exit(fail === 0 ? 0 : 1);
             "cpf_responsavel: extrairDigitos(getVal('inp-cpf-resp')) "
             "— sem strip, payload inclui dots/dashes"
         )
+
+
+class TestEdgeResponseEnvelopeUnwrap:
+    """Regressão: a Edge Function ``validar-atleta`` sempre retorna o
+    envelope ``{success: true, data: {encontrado, status, pendencias,
+    atleta}}``. O frontend precisa desembrulhar antes de ler os campos
+    — sem isso, ``data.encontrado`` é ``undefined`` e o modal cai em
+    ``ESTADOS.NOVO`` ("atleta não cadastrado") mesmo para CPFs que
+    existem na base.
+
+    Bug original (portal-nec-inec.site): usuário preenchia CPFs
+    válidos (atleta 08398021101, responsável 02181594120), recebia
+    200 + ``{encontrado: true, ...}``, mas o app.js lia
+    ``data.encontrado`` direto na raiz — sempre ``undefined`` — e
+    mostrava "atleta não encontrado".
+    """
+
+    def test_verificar_cadastro_desembrulha_envelope_success_data(self):
+        src = _read_app_js()
+        body = _slice(src, "async function verificarCadastro()", "function abrirFormulario()")
+        assert re.search(
+            r"data\s*=\s*data\??\.data\s*\?\?\s*data", body
+        ), (
+            "verificarCadastro deve desembrulhar o envelope "
+            "{success, data} da Edge Function — sem isso, "
+            "data.encontrado é undefined e mostra 'não encontrado'"
+        )
+
+    def test_verificar_cadastro_le_encontrado_apos_desembrulhar(self):
+        src = _read_app_js()
+        body = _slice(src, "async function verificarCadastro()", "function abrirFormulario()")
+        assert "data.encontrado" in body, (
+            "verificarCadastro lê data.encontrado — só funciona "
+            "se desembrulhar antes"
+        )

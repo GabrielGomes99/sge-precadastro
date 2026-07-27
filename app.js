@@ -618,11 +618,23 @@ async function verificarCadastro() {
             throw { __edge: true, status: response.status, body: data };
         }
 
-        // A Edge Function sempre responde com envelope 200/encontrado
-        // (SIBLING-PATH GATE PARITY) — ``encontrado`` indica se o
-        // atleta já existe; ``status`` classifica a ficha em
-        // "completo" | "incompleto" | null; ``pendencias`` é uma
-        // lista de strings (não objetos) com mensagens de pendência.
+        // A Edge Function sempre responde com o envelope
+        // ``{success: true, data: {...}}`` para 2xx (e
+        // ``{success: false, code, message}`` para erros — esses
+        // entram no ``!response.ok`` acima e nunca chegam aqui).
+        // Desembrulhamos o envelope para que ``data.encontrado``,
+        // ``data.status``, ``data.atleta`` etc. reflitam o payload
+        // público da função. Sem isso, ``data.encontrado`` é
+        // ``undefined`` e o modal cai em ESTADOS.NOVO ("atleta não
+        // cadastrado") mesmo para CPFs que existem na base —
+        // regressão observada em 2026-07-27 no portal-nec-inec.site
+        // (Davi Costa Gomes Machado, id=78).
+        data = data?.data ?? data;
+
+        // ``encontrado`` indica se o atleta já existe; ``status``
+        // classifica a ficha em "completo" | "incompleto" | null;
+        // ``pendencias`` é uma lista de strings (não objetos) com
+        // mensagens de pendência.
         consultaState.cpfAtleta = cpfAtleta;
         consultaState.cpfResponsavel = cpfResp;
         consultaState.atleta = (data && data.atleta) || null;
