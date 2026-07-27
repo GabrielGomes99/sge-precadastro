@@ -713,7 +713,15 @@ body::after {
 }
 
 /* ==================== FORM ACTIONS ==================== */
-.form-actions {
+/* Escopado ao formulário principal (``#form-precadastro``) para não
+   capturar o botão "Verificar cadastro" da consulta inicial. Antes
+   deste escopo, a regra global ``.form-actions { position: fixed }``
+   colava o botão no rodapé do viewport com um backdrop escuro,
+   cobrindo os campos de CPF do atleta e do responsável. O
+   ``#form-precadastro`` é o form grande, que precisa do botão
+   fixo para ficar acessível enquanto o usuário rola a página; a
+   consulta é uma seção curta no topo, sem essa necessidade. */
+#form-precadastro .form-actions {
     position: fixed;
     bottom: 0;
     left: 0;
@@ -1026,7 +1034,7 @@ body::after {
         font-size: 30px;
     }
 
-    .form-actions {
+    #form-precadastro .form-actions {
         flex-direction: column;
     }
 
