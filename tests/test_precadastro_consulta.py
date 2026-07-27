@@ -526,3 +526,42 @@ class TestEdgeResponseEnvelopeUnwrap:
             "verificarCadastro lê data.encontrado — só funciona "
             "se desembrulhar antes"
         )
+
+
+class TestAtletaNomeField:
+    """Regressão: a Edge Function ``validar-atleta`` retorna
+    ``atleta.nome`` (canônico via ``mapearAtleta``). ModalConsulta e
+    prePreencherFormulario já tentaram ler ``atleta.nome_completo``
+    (legado) — resultado: nome do atleta vazio no modal e no form
+    pré-preenchido. Bug observado em 2026-07-27 no portal-nec-inec.site
+    com CPF 08398021101 (Davi Costa Gomes Machado).
+    """
+
+    def test_render_le_atleta_nome_nao_nome_completo(self):
+        src = _read_app_js()
+        body = _slice(src, "_render(estado, payload) {", "if (def.onBind) {")
+        assert re.search(
+            r"payload\.atleta\.nome\b(?!_)", body
+        ) or "payload.atleta.nome &&" in body or "payload.atleta && payload.atleta.nome" in body, (
+            "ModalConsulta._render deve ler payload.atleta.nome "
+            "(canônico) — não payload.atleta.nome_completo (legado)"
+        )
+        assert "payload.atleta.nome_completo" not in body, (
+            "ModalConsulta._render NÃO deve ler "
+            "payload.atleta.nome_completo — Edge Function retorna "
+            "'nome' (mapearAtleta canônico)"
+        )
+
+    def test_pre_preencher_formulario_le_atleta_nome_nao_nome_completo(self):
+        src = _read_app_js()
+        body = _slice(src, "function prePreencherFormulario(atleta)", "const ModalConsulta = {")
+        assert re.search(
+            r"atleta\.nome\b(?!_)", body
+        ) or "atleta.nome &&" in body or "atleta && atleta.nome" in body, (
+            "prePreencherFormulario deve ler atleta.nome (canônico) "
+            "— não atleta.nome_completo (legado)"
+        )
+        assert "atleta.nome_completo" not in body, (
+            "prePreencherFormulario NÃO deve ler atleta.nome_completo "
+            "— Edge Function retorna 'nome'"
+        )

@@ -708,7 +708,7 @@ function prePreencherFormulario(atleta) {
     // do formulário. Apenas preenche se o campo existir e estiver
     // vazio — não sobrescreve dados digitados manualmente.
     const campos = {
-        'inp-nome': atleta.nome_completo,
+        'inp-nome': atleta.nome,
         'inp-data-nasc': atleta.data_nascimento,
         'inp-cpf-atleta': atleta.cpf,
         'inp-rg-atleta': atleta.rg,
@@ -747,8 +747,13 @@ const ModalConsulta = {
 
     _render(estado, payload) {
         const def = MODAL_DEFS[estado] || MODAL_DEFS[ESTADOS.NOVO];
-        const atletaNome = payload.atleta && payload.atleta.nome_completo
-            ? payload.atleta.nome_completo
+        // ``mapearAtleta`` retorna o nome canônico ``nome``
+        // (com fallback para ``nome_completo`` legado em
+        // ``cadastros_pendentes``). O modal exibe esse nome para o
+        // usuário confirmar que é a pessoa certa antes de
+        // prosseguir com atualização.
+        const atletaNome = payload.atleta && payload.atleta.nome
+            ? payload.atleta.nome
             : '';
 
         // Build via safe DOM APIs — nunca usar innerHTML com dados do
