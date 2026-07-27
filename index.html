@@ -32,7 +32,60 @@
 
     <!-- ==================== MAIN FORM ==================== -->
     <main class="main-container">
-        <form id="form-precadastro" onsubmit="return false;" novalidate>
+
+        <!-- ===== Consulta inicial (passo 1) =====
+             Antes de abrir o formulário grande, pedimos o CPF do atleta
+             e o CPF do responsável. A Edge Function ``validar-atleta``
+             (action: ``consultar``) usa ambos para:
+               - retornar ``encontrado: false`` (atleta novo);
+               - retornar dados do atleta (caso já cadastrado);
+               - classificar a ficha como ``completo`` ou ``incompleto``;
+               - sinalizar se já existe solicitação de atualização em
+                 análise (``pendencias: [{status: 'pendente', ...}]``).
+             O resultado abre um modal com 4 estados possíveis (ver
+             ``#modal-consulta`` no final do HTML). -->
+        <section class="form-card" id="consulta-card">
+            <div class="card-header">
+                <span class="card-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </span>
+                <h2 class="card-title">Consulta de Cadastro</h2>
+            </div>
+            <p class="consulta-instrucao">
+                Antes de preencher o formulário, informe o <strong>CPF do atleta</strong>
+                e o <strong>CPF do responsável</strong>. Vamos verificar se o atleta
+                já está cadastrado, se a ficha está completa, ou se há uma solicitação
+                de atualização em análise.
+            </p>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="inp-consulta-cpf-atleta">CPF do Atleta <span class="required">*</span></label>
+                    <input type="text" id="inp-consulta-cpf-atleta" placeholder="000.000.000-00" maxlength="14">
+                    <span class="error-msg" id="err-consulta-cpf-atleta"></span>
+                </div>
+                <div class="form-group">
+                    <label for="inp-consulta-cpf-resp">CPF do Responsável <span class="required">*</span></label>
+                    <input type="text" id="inp-consulta-cpf-resp" placeholder="000.000.000-00" maxlength="14">
+                    <span class="error-msg" id="err-consulta-cpf-resp"></span>
+                </div>
+            </div>
+            <div class="form-actions" style="justify-content: flex-end;">
+                <button type="button" class="btn btn-primary" id="btn-verificar" onclick="verificarCadastro()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    Verificar cadastro
+                </button>
+            </div>
+        </section>
+
+        <form id="form-precadastro" onsubmit="return false;" novalidate style="display:none;">
 
             <!-- ===== Foto ===== -->
             <section class="form-card">
@@ -361,6 +414,22 @@
             </div>
         </form>
     </main>
+
+    <!-- ==================== MODAL CONSULTA (4 estados) ==================== -->
+    <!--
+        Estados (controlados por ``window.ModalConsulta.show(state, payload)``):
+        - "novo":        atleta não cadastrado → libera o form.
+        - "completo":    ficha já está completa → bloqueia o form.
+        - "incompleto":  ficha cadastrada mas incompleta → libera o form
+                         pré-preenchido OU pede revisão.
+        - "pendente":    já existe solicitação de atualização em análise
+                         → bloqueia o form.
+    -->
+    <div class="modal-overlay" id="modal-consulta">
+        <div class="modal-card" id="modal-consulta-card">
+            <div id="modal-consulta-content"></div>
+        </div>
+    </div>
 
     <!-- ==================== MODAL SUCESSO ==================== -->
     <div class="modal-overlay" id="modal-sucesso">

@@ -18,7 +18,32 @@ let docRespFile = null;
 document.addEventListener('DOMContentLoaded', () => {
     initModalidades();
     initInputMasks();
+    initConsultaMasks();
 });
+
+function initConsultaMasks() {
+    // Reaproveita os mesmos masks do form principal para os campos
+    // da etapa de consulta.
+    const ids = ['inp-consulta-cpf-atleta', 'inp-consulta-cpf-resp'];
+    for (const id of ids) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        el.addEventListener('input', (e) => {
+            const pos = el.selectionStart;
+            const oldLen = el.value.length;
+            el.value = maskCPF(el.value);
+            const newLen = el.value.length;
+            el.setSelectionRange(pos + (newLen - oldLen), pos + (newLen - oldLen));
+        });
+        // Permite disparar a verificação com Enter no campo de CPF.
+        el.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                verificarCadastro();
+            }
+        });
+    }
+}
 
 function initModalidades() {
     const inecContainer = document.getElementById('mod-inec');
@@ -475,7 +500,7 @@ function limparFormulario() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ==================== MODAL ====================
+// ==================== MODAL SUCESSO ====================
 function fecharModal() {
     document.getElementById('modal-sucesso').classList.remove('active');
 }
@@ -484,6 +509,294 @@ function novoCadastro() {
     fecharModal();
     limparFormulario();
 }
+
+// ==================== CONSULTA / MODAL ESTADO ====================
+//
+// A Edge Function ``validar-atleta`` (action: ``consultar``) classifica
+// cada par (cpf_atleta, cpf_responsavel) em um dos 4 estados abaixo.
+// Mantemos os nomes em uma constante para evitar typos nos ``if`` e
+// facilitar a inspeção visual nos testes.
+//
+//   NOVO        → atleta não cadastrado: libera form vazio.
+//   COMPLETO    → ficha já está completa: bloqueia form.
+//   INCOMPLETO  → ficha cadastrada mas incompleta: libera form
+//                 pré-preenchido para atualização.
+//   PENDENTE    → já existe solicitação de atualização em análise:
+//                 bloqueia form.
+
+const ESTADOS = Object.freeze({
+    NOVO: 'novo',
+    COMPLETO: 'completo',
+    INCOMPLETO: 'incompleto',
+    PENDENTE: 'pendente',
+});
+
+// Guarda o último payload retornado pela Edge Function para que o form
+// possa ser pré-preenchido caso o usuário opte por atualizar.
+const consultaState = {
+    cpfAtleta: '',
+    cpfResponsavel: '',
+    estado: null,
+    atleta: null,        // dados do atleta existente (se houver)
+    pendencias: [],      // pendências retornadas pela Edge Function
+};
+
+function escapeHtml(value) {
+    if (value === null || value === undefined) return '';
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+async function verificarCadastro() {
+    const cpfAtletaEl = document.getElementById('inp-consulta-cpf-atleta');
+    const cpfRespEl = document.getElementById('inp-consulta-cpf-resp');
+
+    clearErrors();
+
+    const cpfAtleta = cpfAtletaEl.value.trim();
+    const cpfResp = cpfRespEl.value.trim();
+
+    let hasError = false;
+    if (!cpfAtleta || !validateCPF(cpfAtleta)) {
+        setError('consulta-cpf-atleta', 'Informe um CPF válido para o atleta');
+        hasError = true;
+    }
+    if (!cpfResp || !validateCPF(cpfResp)) {
+        setError('consulta-cpf-resp', 'Informe um CPF válido para o responsável');
+        hasError = true;
+    }
+    if (hasError) return;
+
+    const btn = document.getElementById('btn-verificar');
+    btn.disabled = true;
+    btn.classList.add('loading');
+
+    try {
+        const { data, error } = await supabaseClient.functions.invoke('validar-atleta', {
+            body: {
+                action: 'consultar',
+                cpf_atleta: cpfAtleta,
+                cpf_responsavel: cpfResp,
+            },
+        });
+
+        if (error) {
+            console.error('validar-atleta error:', error);
+            showToast('Não foi possível verificar o cadastro agora. Tente novamente em instantes.', 'error');
+            return;
+        }
+
+        // A Edge Function sempre responde com envelope 200/encontrado
+        // (SIBLING-PATH GATE PARITY) — ``encontrado`` indica se o
+        // atleta já existe; ``status`` classifica a ficha em
+        // "completo" | "incompleto" | null; ``pendencias`` é uma
+        // lista de strings (não objetos) com mensagens de pendência.
+        consultaState.cpfAtleta = cpfAtleta;
+        consultaState.cpfResponsavel = cpfResp;
+        consultaState.atleta = (data && data.atleta) || null;
+        consultaState.pendencias = (data && data.pendencias) || [];
+
+        let estado;
+        if (data && data.encontrado === false) {
+            estado = ESTADOS.NOVO;
+        } else if (data && data.encontrado === true) {
+            const ficha = data.status; // "completo" | "incompleto" | null
+            const temPendencia =
+                consultaState.pendencias.length > 0 &&
+                consultaState.pendencias.some(
+                    (p) => typeof p === 'string' && /pendente/i.test(p)
+                );
+            if (temPendencia) {
+                estado = ESTADOS.PENDENTE;
+            } else if (ficha === 'completo') {
+                estado = ESTADOS.COMPLETO;
+            } else {
+                estado = ESTADOS.INCOMPLETO;
+            }
+        } else {
+            // Resposta fora do contrato — trata como novo para não
+            // bloquear o usuário.
+            estado = ESTADOS.NOVO;
+        }
+
+        consultaState.estado = estado;
+        ModalConsulta.show(estado, data || {});
+    } catch (err) {
+        console.error('verificarCadastro exception:', err);
+        showToast('Erro de conexão. Verifique sua internet e tente novamente.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.classList.remove('loading');
+    }
+}
+
+function abrirFormulario() {
+    // Esconde o card de consulta e mostra o form principal. Se
+    // houver dados de atleta existente (INCOMPLETO), pré-preenche
+    // os campos relevantes.
+    const consulta = document.getElementById('consulta-card');
+    const form = document.getElementById('form-precadastro');
+    if (consulta) consulta.style.display = 'none';
+    if (form) {
+        form.style.display = 'block';
+        window.scrollTo({ top: form.offsetTop - 20, behavior: 'smooth' });
+    }
+
+    if (consultaState.estado === ESTADOS.INCOMPLETO && consultaState.atleta) {
+        prePreencherFormulario(consultaState.atleta);
+    }
+}
+
+function prePreencherFormulario(atleta) {
+    // Mapeia os campos retornados pela Edge Function para os inputs
+    // do formulário. Apenas preenche se o campo existir e estiver
+    // vazio — não sobrescreve dados digitados manualmente.
+    const campos = {
+        'inp-nome': atleta.nome_completo,
+        'inp-data-nasc': atleta.data_nascimento,
+        'inp-cpf-atleta': atleta.cpf,
+        'inp-rg-atleta': atleta.rg,
+        'inp-nome-resp': atleta.nome_responsavel,
+        'inp-cpf-resp': atleta.cpf_responsavel,
+        'inp-email': atleta.email,
+        'inp-telefone': atleta.telefone,
+    };
+    for (const [id, valor] of Object.entries(campos)) {
+        const el = document.getElementById(id);
+        if (!el || !valor) continue;
+        if (el.value.trim()) continue;
+        el.value = valor;
+    }
+}
+
+const ModalConsulta = {
+    _overlay: null,
+    _content: null,
+
+    _ensureRefs() {
+        if (!this._overlay) this._overlay = document.getElementById('modal-consulta');
+        if (!this._content) this._content = document.getElementById('modal-consulta-content');
+    },
+
+    show(estado, payload) {
+        this._ensureRefs();
+        this._render(estado, payload);
+        this._overlay.classList.add('active');
+    },
+
+    close() {
+        this._ensureRefs();
+        this._overlay.classList.remove('active');
+    },
+
+    _render(estado, payload) {
+        const def = MODAL_DEFS[estado] || MODAL_DEFS[ESTADOS.NOVO];
+        const atletaNome = payload.atleta && payload.atleta.nome_completo
+            ? payload.atleta.nome_completo
+            : '';
+
+        // Build via safe DOM APIs — nunca usar innerHTML com dados do
+        // backend (Edge Function). ``def.iconSvg`` e ``def.buttonsHtml``
+        // são literais estáticos deste arquivo; ``atletaNome`` e os
+        // textos vão via ``textContent``/setAttribute.
+        this._content.replaceChildren();
+
+        const iconWrap = document.createElement('div');
+        iconWrap.className = `modal-status-icon ${def.iconClass}`;
+        // ``iconSvg`` é literal do autor do arquivo, não entrada do usuário.
+        iconWrap.innerHTML = def.iconSvg;
+
+        const title = document.createElement('h2');
+        title.className = 'modal-title';
+        title.textContent = def.titulo;
+
+        const desc = document.createElement('p');
+        desc.className = 'modal-text';
+        desc.textContent = def.descricao;
+
+        this._content.append(iconWrap, title, desc);
+
+        if (atletaNome) {
+            const detalhe = document.createElement('p');
+            detalhe.className = 'modal-text';
+            detalhe.append('Atleta: ', document.createElement('strong'));
+            detalhe.lastChild.textContent = atletaNome;
+            this._content.appendChild(detalhe);
+        }
+
+        const actions = document.createElement('div');
+        actions.className = 'modal-actions';
+        // ``buttonsHtml`` é literal do autor do arquivo.
+        actions.innerHTML = def.buttonsHtml;
+        this._content.appendChild(actions);
+
+        if (def.onBind) {
+            def.onBind(this, payload);
+        }
+    },
+};
+
+const MODAL_DEFS = {
+    [ESTADOS.NOVO]: {
+        iconClass: 'icon-info',
+        iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>',
+        titulo: 'Atleta não cadastrado',
+        descricao: 'Não encontramos um cadastro para este CPF. Você pode prosseguir com o formulário de pré-cadastro abaixo.',
+        buttonsHtml: '<button class="btn-primary-modal" data-modal-action="prosseguir-novo">Prosseguir com o cadastro</button>',
+        onBind(modal) {
+            const btn = modal._content.querySelector('[data-modal-action="prosseguir-novo"]');
+            if (btn) btn.addEventListener('click', () => {
+                modal.close();
+                abrirFormulario();
+            });
+        },
+    },
+    [ESTADOS.COMPLETO]: {
+        iconClass: 'icon-success',
+        iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>',
+        titulo: 'Cadastro já está completo',
+        descricao: 'Este atleta já possui ficha completa no sistema. Não é necessário enviar um novo pré-cadastro. Em caso de dúvida, procure a secretaria.',
+        buttonsHtml: '<button class="btn-outline-modal" data-modal-action="fechar">Fechar</button>',
+        onBind(modal) {
+            const btn = modal._content.querySelector('[data-modal-action="fechar"]');
+            if (btn) btn.addEventListener('click', () => modal.close());
+        },
+    },
+    [ESTADOS.INCOMPLETO]: {
+        iconClass: 'icon-warning',
+        iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
+        titulo: 'Ficha incompleta — deseja atualizar?',
+        descricao: 'Encontramos um cadastro deste atleta, mas a ficha ainda está incompleta. Você pode atualizar os dados complementando o formulário abaixo.',
+        buttonsHtml: `
+            <button class="btn-outline-modal" data-modal-action="fechar">Agora não</button>
+            <button class="btn-primary-modal" data-modal-action="prosseguir-incompleto">Atualizar cadastro</button>
+        `,
+        onBind(modal) {
+            const btnFechar = modal._content.querySelector('[data-modal-action="fechar"]');
+            const btnProsseguir = modal._content.querySelector('[data-modal-action="prosseguir-incompleto"]');
+            if (btnFechar) btnFechar.addEventListener('click', () => modal.close());
+            if (btnProsseguir) btnProsseguir.addEventListener('click', () => {
+                modal.close();
+                abrirFormulario();
+            });
+        },
+    },
+    [ESTADOS.PENDENTE]: {
+        iconClass: 'icon-warning',
+        iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>',
+        titulo: 'Solicitação já em análise',
+        descricao: 'Já existe uma solicitação de atualização para este atleta em análise pela equipe. Aguarde a conclusão antes de enviar uma nova.',
+        buttonsHtml: '<button class="btn-outline-modal" data-modal-action="fechar">Fechar</button>',
+        onBind(modal) {
+            const btn = modal._content.querySelector('[data-modal-action="fechar"]');
+            if (btn) btn.addEventListener('click', () => modal.close());
+        },
+    },
+};
 
 // ==================== LOADING & TOAST ====================
 function showLoading(show) {

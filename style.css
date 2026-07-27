@@ -780,6 +780,23 @@ body::after {
     animation: checkPop .5s ease both;
 }
 
+.modal-status-icon {
+    margin-bottom: 24px;
+    animation: checkPop .5s ease both;
+}
+
+.modal-status-icon.icon-success {
+    color: var(--success);
+}
+
+.modal-status-icon.icon-warning {
+    color: #f5a623;
+}
+
+.modal-status-icon.icon-info {
+    color: var(--accent);
+}
+
 @keyframes checkPop {
     0% {
         transform: scale(0);
