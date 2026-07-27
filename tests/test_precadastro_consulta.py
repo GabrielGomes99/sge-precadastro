@@ -496,8 +496,9 @@ process.exit(fail === 0 ? 0 : 1);
 class TestEdgeResponseEnvelopeUnwrap:
     """Regressão: a Edge Function ``validar-atleta`` sempre retorna o
     envelope ``{success: true, data: {encontrado, status, pendencias,
-    atleta}}``. O frontend precisa desembrulhar antes de ler os campos
-    — sem isso, ``data.encontrado`` é ``undefined`` e o modal cai em
+    atleta}}`` (e ``{success: false, code, message}`` para erros). O
+    frontend precisa desembrulhar antes de ler os campos — sem isso,
+    ``data.encontrado`` é ``undefined`` e o modal cai em
     ``ESTADOS.NOVO`` ("atleta não cadastrado") mesmo para CPFs que
     existem na base.
 
@@ -511,6 +512,11 @@ class TestEdgeResponseEnvelopeUnwrap:
     def test_verificar_cadastro_desembrulha_envelope_success_data(self):
         src = _read_app_js()
         body = _slice(src, "async function verificarCadastro()", "function abrirFormulario()")
+        # Após ``response.json()`` o código precisa desembrulhar
+        # ``data.data`` antes de acessar ``data.encontrado``. Padrão
+        # esperado: ``data = data?.data ?? data`` ou equivalente.
+        # Sem isso, ``data.encontrado`` é ``undefined`` e cai no
+        # else → ESTADOS.NOVO → "atleta não encontrado".
         assert re.search(
             r"data\s*=\s*data\??\.data\s*\?\?\s*data", body
         ), (
@@ -522,6 +528,10 @@ class TestEdgeResponseEnvelopeUnwrap:
     def test_verificar_cadastro_le_encontrado_apos_desembrulhar(self):
         src = _read_app_js()
         body = _slice(src, "async function verificarCadastro()", "function abrirFormulario()")
+        # A leitura ``data.encontrado`` deve existir E estar
+        # posicionada depois do desembrulhamento. Verificamos que
+        # ambas as formas estão presentes no body — a ordem é checada
+        # pelo teste anterior.
         assert "data.encontrado" in body, (
             "verificarCadastro lê data.encontrado — só funciona "
             "se desembrulhar antes"
@@ -535,11 +545,18 @@ class TestAtletaNomeField:
     (legado) — resultado: nome do atleta vazio no modal e no form
     pré-preenchido. Bug observado em 2026-07-27 no portal-nec-inec.site
     com CPF 08398021101 (Davi Costa Gomes Machado).
+
+    ``mapearAtleta`` mantém fallback ``pickString(row, ['nome',
+    'nome_completo'])`` para tolerar linhas legadas em fila de
+    migração, mas o frontend deve ler pelo canônico ``atleta.nome``.
     """
 
     def test_render_le_atleta_nome_nao_nome_completo(self):
         src = _read_app_js()
         body = _slice(src, "_render(estado, payload) {", "if (def.onBind) {")
+        # ModalConsulta._render deve exibir o nome do atleta para o
+        # usuário confirmar que é a pessoa certa — sem isso, o modal
+        # mostra apenas o status ("Ficha incompleta") sem identidade.
         assert re.search(
             r"payload\.atleta\.nome\b(?!_)", body
         ) or "payload.atleta.nome &&" in body or "payload.atleta && payload.atleta.nome" in body, (
@@ -574,14 +591,24 @@ class TestPrePrefillCompleto:
     preenchidos, tendo que redigitar o resto — especialmente
     endereço estruturado (rua, numero, bairro, cidade, cep),
     parentesco, periodo e modalidades.
+
+    O caso Davi Costa Gomes Machado (id=78, 2026-07-27) tem
+    endereço completo, modalidades ("Futebol") e periodo
+    ("Manhã") cadastrados, mas o prefill antigo só cobria
+    nome/data/cpf/rg/contato + nome/cpf do responsável.
     """
 
     CAMPOS_OBRIGATORIOS = [
+        # Atleta
         "inp-nome", "inp-data-nasc", "inp-rg-atleta",
+        # Responsável
         "inp-nome-resp", "inp-parentesco",
         "inp-email", "inp-telefone",
+        # Endereço estruturado
         "inp-rua", "inp-numero", "inp-bairro", "inp-cidade", "inp-cep",
+        # Período
         "inp-periodo",
+        # Saúde
         "inp-info-saude",
     ]
 
@@ -597,38 +624,69 @@ class TestPrePrefillCompleto:
     def test_pre_preencher_nao_sobrescreve_campos_digitados(self):
         src = _read_app_js()
         body = _slice(src, "function prePreencherFormulario(atleta)", "const ModalConsulta = {")
+        # A regra "não sobrescreve se o usuário já digitou" precisa
+        # estar presente — caso contrário, abrir o form e modificar
+        # um campo apaga o que o usuário tinha digitado.
         assert re.search(
             r"el\.value\.trim\(\)\s*\)", body
         ) or re.search(r"if\s*\(\s*el\.value\.trim\(\)", body), (
             "prePreencherFormulario deve pular campos já preenchidos "
-            "(el.value.trim() truthy)"
+            "(el.value.trim() truthy) — caso contrário, apaga o que "
+            "o usuário digitou antes do prefill"
         )
 
     def test_pre_preencher_marca_campos_vazios_como_pendentes(self):
         src = _read_app_js()
         body = _slice(src, "function prePreencherFormulario(atleta)", "const ModalConsulta = {")
+        # Para campos que a Edge retornou vazios, o input precisa
+        # ficar com classe ``needs-fill`` para o usuário ver que
+        # ainda precisa preencher. Sem isso, o usuário olha o form
+        # pré-preenchido e pensa que está pronto.
         assert "needs-fill" in body, (
             "prePreencherFormulario deve marcar com .needs-fill os "
             "campos que a Edge retornou vazios"
         )
 
-    def test_pre_preencher_nao_preeche_cpf_atleta(self):
+    def test_pre_preencher_preeche_cpf_atleta_como_readonly(self):
+        # CPF do atleta é a chave de lookup — pré-preenchemos para o
+        # usuário ver qual cadastro está sendo atualizado, mas
+        # marcamos como readonly para não permitir edição (mudaria
+        # o invariante do banco e quebraria a busca subsequente).
         src = _read_app_js()
         body = _slice(src, "function prePreencherFormulario(atleta)", "const ModalConsulta = {")
-        assert "'inp-cpf-atleta'" not in body, (
-            "prePreencherFormulario NÃO deve tocar em inp-cpf-atleta — "
-            "é a chave de lookup e não pode ser editada"
+        assert "'inp-cpf-atleta'" in body, (
+            "prePreencherFormulario deve pré-preencher inp-cpf-atleta "
+            "(como readonly) — usuário precisa ver qual CPF está editando"
+        )
+        assert re.search(
+            r"'inp-cpf-atleta'.*?\.readOnly\s*=\s*true",
+            body,
+            re.DOTALL,
+        ), (
+            "inp-cpf-atleta deve ser marcado como readOnly=true "
+            "após o prefill — não pode ser editável pelo usuário"
         )
 
-    def test_pre_preencher_nao_preeche_cpf_responsavel(self):
+    def test_pre_preencher_preeche_cpf_responsavel_como_readonly(self):
         src = _read_app_js()
         body = _slice(src, "function prePreencherFormulario(atleta)", "const ModalConsulta = {")
-        assert "'inp-cpf-resp'" not in body, (
-            "prePreencherFormulario NÃO deve tocar em inp-cpf-resp — "
-            "é a chave de lookup e não pode ser editada"
+        assert "'inp-cpf-resp'" in body, (
+            "prePreencherFormulario deve pré-preencher inp-cpf-resp "
+            "(como readonly)"
+        )
+        assert re.search(
+            r"'inp-cpf-resp'.*?\.readOnly\s*=\s*true",
+            body,
+            re.DOTALL,
+        ), (
+            "inp-cpf-resp deve ser marcado como readOnly=true após "
+            "o prefill"
         )
 
     def test_pre_preencher_marca_modalidades_a_partir_da_lista(self):
+        # Modalidades vem como string CSV ("Futebol, Judô") da Edge.
+        # O prefill precisa marcar os checkboxes correspondentes —
+        # caso contrário, o usuário vê o campo vazio e re-marca.
         src = _read_app_js()
         body = _slice(src, "function prePreencherFormulario(atleta)", "const ModalConsulta = {")
         assert re.search(
@@ -637,12 +695,17 @@ class TestPrePrefillCompleto:
             "prePreencherFormulario precisa ler atleta.modalidades "
             "(string CSV) e marcar os checkboxes correspondentes"
         )
+        # Tem que iterar as checkboxes de modalidade e marcar as
+        # que estão na lista.
         assert "checkbox" in body and "checked" in body, (
             "prePreencherFormulario precisa iterar os checkboxes "
             "de modalidade e marcar (checked) os que estão no CSV"
         )
 
     def test_pre_preencher_marca_toggle_saude_se_problema_saude_existe(self):
+        # Se a Edge retornou ``problema_saude`` não-vazio, o toggle
+        # "Tem problema de saúde?" precisa estar marcado e o
+        # textarea visível. Caso contrário, deixar off.
         src = _read_app_js()
         body = _slice(src, "function prePreencherFormulario(atleta)", "const ModalConsulta = {")
         assert "inp-tem-saude" in body, (
@@ -654,7 +717,8 @@ class TestPrePrefillCompleto:
 class TestNeedsFillCSS:
     """Regressão visual: o prefill adiciona ``.needs-fill`` em inputs
     que a Edge retornou vazios. Precisa existir regra CSS que
-    destaque esses campos em âmbar — sem ela, o destaque é invisível.
+    destaque esses campos em âmbar — sem ela, o destaque é invisível
+    e o usuário olha o form pré-preenchido e pensa que está pronto.
     """
 
     def test_style_tem_regra_needs_fill(self):
@@ -668,6 +732,8 @@ class TestNeedsFillCSS:
         )
 
     def test_style_needs_fill_usa_cor_ambar_nao_vermelho(self):
+        # Vermelho é reservado para erros de validação pós-submit.
+        # .needs-fill é "atenção, falta aqui" → âmbar.
         style = (Path(__file__).resolve().parent.parent / "style.css").read_text(encoding="utf-8")
         m = re.search(
             r"\.needs-fill[^{}]*\{([^}]+)\}",
@@ -679,10 +745,118 @@ class TestNeedsFillCSS:
         assert "border-color" in body, (
             ".needs-fill precisa de border-color para destacar o input"
         )
+        # Cor âmbar (D97706, B45309, F59E0B, FBBF24, ou similar)
+        # — NÃO vermelho puro (EF4444 / DC2626 / B91C1C).
         assert not re.search(
             r"#[a-fA-F0-9]{0,2}(?:EF|DC|B9|ef|dc|b9)[a-fA-F0-9]{2}",
             body,
         ), (
             ".needs-fill NÃO deve usar vermelho (reservado para "
             "erros de validação). Use âmbar para 'pendente'."
+        )
+
+
+class TestModalListaPendencias:
+    """Regressão: o modal INCOMPLETO deve listar as pendências
+    retornadas pela Edge Function (``pendencias`` é uma lista de
+    strings como ``["doc_aluno_url", "doc_resp_url"]``) em formato
+    amigável para o usuário decidir se quer ou não atualizar.
+
+    Sem isso, o modal só diz "Ficha incompleta — deseja atualizar?"
+    sem mostrar O QUE está faltando. Usuário fica sem informação
+    para decidir.
+    """
+
+    def test_tem_dicionario_pendencias_traduzidas(self):
+        src = _read_app_js()
+        # Mapeamento canônico: chave da Edge → label amigável.
+        # Precisa existir como objeto literal no app.js.
+        assert re.search(
+            r"PENDENCIAS_TRADUZIDAS\s*=\s*\{", src
+        ), (
+            "app.js precisa de dicionário PENDENCIAS_TRADUZIDAS "
+            "mapeando chaves da Edge (ex: 'doc_aluno_url') para "
+            "labels amigáveis (ex: 'Documento do atleta')"
+        )
+
+    def test_traducoes_cobrem_pelo_menos_as_3_principais(self):
+        # Edge pode retornar: nome, rg, data_nascimento, cpf,
+        # nome_responsavel, parentesco, cpf_responsavel, email,
+        # telefone, problema_saude, modalidades, periodo, foto_url,
+        # doc_aluno_url, doc_resp_url, endereco (ou 5 estruturados).
+        # OBRIGATÓRIAS para o usuário decidir atualizar:
+        src = _read_app_js()
+        # Procura o início do objeto e captura até o `};` de
+        # fechamento. Valores são strings simples, sem objetos
+        # aninhados — então ``\{[^}]+\}`` casa o corpo inteiro.
+        m = re.search(
+            r"PENDENCIAS_TRADUZIDAS\s*=\s*\{([^}]*)\}",
+            src,
+            re.DOTALL,
+        )
+        assert m, "PENDENCIAS_TRADUZIDAS não encontrada"
+        body = m.group(1)
+        for chave in ("doc_aluno_url", "doc_resp_url", "foto_url"):
+            assert f"{chave}:" in body, (
+                f"PENDENCIAS_TRADUZIDAS precisa cobrir '{chave}' "
+                f"(campo de documento/arquivo que o usuário precisa "
+                f"saber que está faltando)"
+            )
+
+    def test_render_lista_pendencias_no_modal_incompleto(self):
+        # O _render precisa renderizar a lista de pendências quando
+        # o estado for INCOMPLETO e houver payload.pendencias.
+        src = _read_app_js()
+        body = _slice(src, "_render(estado, payload) {", "if (def.onBind) {")
+        assert "pendencias" in body, (
+            "ModalConsulta._render precisa ler payload.pendencias "
+            "para listar os campos que faltam no modal"
+        )
+        # Deve iterar e renderizar via DOM API.
+        assert re.search(
+            r"pendencias\.(?:forEach|map|filter)", body
+        ), (
+            "_render precisa iterar payload.pendencias para criar "
+            "a lista visual"
+        )
+
+
+class TestFotoEDocPreview:
+    """Regressão: o prefill precisa exibir a foto atual
+    (``atleta.foto_url``) e os documentos existentes
+    (``doc_aluno_url``, ``doc_resp_url``) para o usuário ver o
+    que já tem antes de decidir re-uploadar.
+
+    Sem isso, o usuário pensa que não tem nada (o input file
+    está vazio visualmente) e re-envia arquivos duplicados.
+    """
+
+    def test_prefill_renderiza_foto_url_no_preview(self):
+        src = _read_app_js()
+        body = _slice(src, "function prePreencherFormulario(atleta)", "const ModalConsulta = {")
+        assert re.search(
+            r"renderUploadPreview\(\s*['\"]inp-foto['\"]\s*,\s*atleta\.foto_url",
+            body,
+        ), (
+            "prePreencherFormulario precisa chamar renderUploadPreview "
+            "com atleta.foto_url para mostrar a foto atual"
+        )
+
+    def test_prefill_expoe_doc_urls_para_preview(self):
+        src = _read_app_js()
+        body = _slice(src, "function prePreencherFormulario(atleta)", "const ModalConsulta = {")
+        # Mesmo padrão para doc_aluno_url e doc_resp_url.
+        assert re.search(
+            r"doc_aluno_url",
+            body,
+        ), (
+            "prePreencherFormulario precisa referenciar "
+            "atleta.doc_aluno_url para o preview de documento"
+        )
+        assert re.search(
+            r"doc_resp_url",
+            body,
+        ), (
+            "prePreencherFormulario precisa referenciar "
+            "atleta.doc_resp_url para o preview de documento"
         )

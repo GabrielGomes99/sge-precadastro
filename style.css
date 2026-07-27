@@ -315,6 +315,85 @@ body::after {
     border-radius: 4px;
 }
 
+/* ==================== MODAL PENDENCIAS ====================
+   Lista de campos que ainda faltam na ficha, exibida no modal
+   INCOMPLETO. Cada item é um "• Documento do atleta" em texto
+   simples para o usuário decidir se quer ou não atualizar. */
+.modal-pendencias-label {
+    margin-top: 12px;
+    font-weight: 600;
+}
+.modal-pendencias {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0 16px 0;
+    text-align: left;
+}
+.modal-pendencias li {
+    padding: 6px 0 6px 24px;
+    position: relative;
+    color: #92400e;
+    font-size: 14px;
+    line-height: 1.4;
+}
+.modal-pendencias li::before {
+    content: "•";
+    color: #d97706;
+    position: absolute;
+    left: 8px;
+    font-weight: bold;
+    font-size: 18px;
+    line-height: 1;
+}
+
+/* ==================== CPF READONLY ====================
+   Quando o form é aberto em modo atualização, os CPFs do atleta
+   e do responsável vêm pré-preenchidos e marcados como readOnly.
+   Visualmente: fundo cinza claro + cursor normal, sinalizando
+   "este campo é informativo, não editável". */
+.form-group input.readonly,
+.form-group input[readonly] {
+    background-color: #f3f4f6;
+    color: #6b7280;
+    cursor: not-allowed;
+}
+
+/* ==================== FOTO/DOC PREVIEW ====================
+   Preview da foto atual e dos documentos existentes no form de
+   atualização. O JS injeta um <img> ou <a> dentro de
+   ``.upload-preview`` quando o data-attribute correspondente
+   está presente, com link "manter" / "trocar". */
+.upload-preview {
+    margin: 8px 0;
+    padding: 8px;
+    background: #f9fafb;
+    border: 1px dashed #d1d5db;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #4b5563;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.upload-preview img {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid #e5e7eb;
+}
+.upload-preview a {
+    color: #2563eb;
+    text-decoration: underline;
+    word-break: break-all;
+}
+.upload-preview .upload-preview-label {
+    color: #6b7280;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
 /* ==================== PHOTO UPLOAD ==================== */
 .photo-upload-area {
     display: flex;

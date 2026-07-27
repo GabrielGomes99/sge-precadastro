@@ -10,6 +10,35 @@ const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const MODALIDADES_INEC = ['Futebol'];
 const MODALIDADES_NEC = ['Judô', 'Jiu-Jitsu', 'Balé', 'Forró', 'Hip Hop', 'Zumba', 'Vôlei', 'Futsal', 'X1', 'Basquete', 'Tênis de Mesa', 'Handball'];
 
+// Tradução amigável das chaves de pendência retornadas pela Edge
+// Function ``validar-atleta`` em ``data.pendencias`` (string[]).
+// O modal de consulta INCOMPLETO lista essas strings traduzidas
+// para o usuário decidir se quer ou não atualizar. A chave precisa
+// casar 100% com o que ``calcularPendencias`` na Edge emite.
+const PENDENCIAS_TRADUZIDAS = {
+    nome: 'Nome completo do atleta',
+    rg: 'RG do atleta',
+    data_nascimento: 'Data de nascimento',
+    cpf: 'CPF do atleta',
+    nome_responsavel: 'Nome do responsável',
+    parentesco: 'Grau de parentesco do responsável',
+    cpf_responsavel: 'CPF do responsável',
+    email: 'E-mail de contato',
+    telefone: 'Telefone de contato',
+    problema_saude: 'Informações de saúde',
+    modalidades: 'Modalidades esportivas',
+    periodo: 'Período (manhã/tarde/noite)',
+    foto_url: 'Foto do atleta',
+    doc_aluno_url: 'Documento de identidade do atleta',
+    doc_resp_url: 'Documento de identidade do responsável',
+    endereco: 'Endereço completo',
+    rua: 'Rua',
+    numero: 'Número',
+    bairro: 'Bairro',
+    cidade: 'Cidade',
+    cep: 'CEP',
+};
+
 // ==================== FILE STATE ====================
 let fotoFile = null;
 let docAlunoFile = null;
@@ -711,9 +740,15 @@ function prePreencherFormulario(atleta) {
     // vazios ficam com classe ``.needs-fill`` para o usuário ver
     // rapidamente o que ainda precisa preencher.
     //
-    // Não pré-preenchemos ``inp-cpf-atleta`` nem ``inp-cpf-resp`` —
-    // são chaves de lookup e não podem ser editadas pelo portal.
+    // CPFs do atleta e do responsável SÃO pré-preenchidos (para o
+    // usuário ver qual cadastro está editando), mas marcados como
+    // ``readOnly`` para impedir edição — são chaves de lookup e
+    // não podem ser alteradas pelo portal (quebraria o invariante
+    // do banco e invalidaria a busca subsequente).
     const campos = {
+        // CPFs — readonly, ver nota acima
+        'inp-cpf-atleta': atleta.cpf,
+        'inp-cpf-resp': atleta.cpf_responsavel,
         // Atleta
         'inp-nome': atleta.nome,
         'inp-data-nasc': atleta.data_nascimento,
@@ -733,6 +768,7 @@ function prePreencherFormulario(atleta) {
         'inp-periodo': atleta.periodo,
         'inp-info-saude': atleta.problema_saude,
     };
+    const readonlyCpfs = new Set(['inp-cpf-atleta', 'inp-cpf-resp']);
     for (const [id, valor] of Object.entries(campos)) {
         const el = document.getElementById(id);
         if (!el) continue;
@@ -746,6 +782,11 @@ function prePreencherFormulario(atleta) {
             // A Edge não retornou valor para este campo — destaca
             // visualmente para o usuário preencher.
             el.classList.add('needs-fill');
+        }
+        // CPFs ficam readonly após o prefill.
+        if (readonlyCpfs.has(id)) {
+            el.readOnly = true;
+            el.classList.add('readonly');
         }
     }
 
@@ -781,6 +822,56 @@ function prePreencherFormulario(atleta) {
         // toggleSaude() já existe e ajusta o display do textarea
         // baseado no estado do checkbox.
         if (typeof toggleSaude === 'function') toggleSaude();
+    }
+
+    // Preview de arquivos: cria um bloco visual
+    // ``.upload-preview`` ao lado de cada file input quando a
+    // Edge retornou URL existente (``foto_url``,
+    // ``doc_aluno_url``, ``doc_resp_url``). O usuário vê a
+    // miniatura/link do arquivo atual e decide se mantém (não
+    // re-seleciona nada) ou troca. Sem isso, o usuário pensa que
+    // não tem nada e re-envia arquivos duplicados.
+    renderUploadPreview('inp-foto', atleta.foto_url, 'Foto atual');
+    renderUploadPreview('inp-doc-aluno', atleta.doc_aluno_url, 'Documento do atleta');
+    renderUploadPreview('inp-doc-resp', atleta.doc_resp_url, 'Documento do responsável');
+}
+
+// Helper: renderiza o preview de um arquivo existente (foto ou
+// documento) logo após o file input. Se a URL for vazia, limpa
+// qualquer preview anterior. URLs do Supabase Storage têm
+// ``/storage/v1/object/public/`` — imagens podem ser mostradas
+// inline; PDFs/links abrem em nova aba.
+function renderUploadPreview(inputId, url, label) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    // Remove preview anterior se existir (idempotente em re-renders).
+    const prev = input.parentElement.querySelector('.upload-preview');
+    if (prev) prev.remove();
+    if (!url) return;
+    const isImage = /\.(jpe?g|png|webp|gif|svg)(\?|$)/i.test(url);
+    const wrap = document.createElement('div');
+    wrap.className = 'upload-preview';
+    const labelEl = document.createElement('span');
+    labelEl.className = 'upload-preview-label';
+    labelEl.textContent = label;
+    wrap.appendChild(labelEl);
+    if (isImage) {
+        const img = document.createElement('img');
+        img.src = url;
+        img.alt = label;
+        wrap.appendChild(img);
+    }
+    const link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = isImage ? 'Ver em tamanho real' : 'Abrir arquivo';
+    wrap.appendChild(link);
+    // Insere o preview logo após o input.
+    if (input.nextSibling) {
+        input.parentElement.insertBefore(wrap, input.nextSibling);
+    } else {
+        input.parentElement.appendChild(wrap);
     }
 }
 
@@ -842,6 +933,31 @@ const ModalConsulta = {
             detalhe.append('Atleta: ', document.createElement('strong'));
             detalhe.lastChild.textContent = atletaNome;
             this._content.appendChild(detalhe);
+        }
+
+        // Lista de pendências: para ESTADOS.INCOMPLETO, mostra
+        // quais campos estão faltando para o usuário decidir se
+        // quer ou não atualizar. Sem isso, o modal só diz
+        // "Ficha incompleta" sem mostrar O QUE falta.
+        if (estado === ESTADOS.INCOMPLETO && Array.isArray(payload.pendencias) && payload.pendencias.length > 0) {
+            const pendLabel = document.createElement('p');
+            pendLabel.className = 'modal-text modal-pendencias-label';
+            pendLabel.textContent = 'Itens que ainda faltam na ficha:';
+            this._content.appendChild(pendLabel);
+
+            const ul = document.createElement('ul');
+            ul.className = 'modal-pendencias';
+            payload.pendencias.forEach((chave) => {
+                const li = document.createElement('li');
+                // Pega a tradução amigável (ex: 'doc_aluno_url' →
+                // 'Documento do atleta'); fallback para a própria
+                // chave se não houver mapeamento (defensivo).
+                const label = (typeof PENDENCIAS_TRADUZIDAS === 'object' && PENDENCIAS_TRADUZIDAS[chave])
+                    || chave;
+                li.textContent = label;
+                ul.appendChild(li);
+            });
+            this._content.appendChild(ul);
         }
 
         const actions = document.createElement('div');
