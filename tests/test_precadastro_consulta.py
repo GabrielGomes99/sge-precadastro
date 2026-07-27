@@ -565,3 +565,124 @@ class TestAtletaNomeField:
             "prePreencherFormulario NÃO deve ler atleta.nome_completo "
             "— Edge Function retorna 'nome'"
         )
+
+
+class TestPrePrefillCompleto:
+    """Regressão: prePreencherFormulario precisa cobrir TODOS os campos
+    editáveis que a Edge Function ``validar-atleta`` retorna. Sem
+    isso, usuário abre o form de atualização e vê só 8 campos
+    preenchidos, tendo que redigitar o resto — especialmente
+    endereço estruturado (rua, numero, bairro, cidade, cep),
+    parentesco, periodo e modalidades.
+    """
+
+    CAMPOS_OBRIGATORIOS = [
+        "inp-nome", "inp-data-nasc", "inp-rg-atleta",
+        "inp-nome-resp", "inp-parentesco",
+        "inp-email", "inp-telefone",
+        "inp-rua", "inp-numero", "inp-bairro", "inp-cidade", "inp-cep",
+        "inp-periodo",
+        "inp-info-saude",
+    ]
+
+    def test_pre_preencher_cobre_todos_os_campos_editaveis(self):
+        src = _read_app_js()
+        body = _slice(src, "function prePreencherFormulario(atleta)", "const ModalConsulta = {")
+        missing = [c for c in self.CAMPOS_OBRIGATORIOS if f"'{c}'" not in body]
+        assert not missing, (
+            f"prePreencherFormulario não cobre os inputs: {missing}. "
+            "Usuário com cadastro completo perde tempo redigitando."
+        )
+
+    def test_pre_preencher_nao_sobrescreve_campos_digitados(self):
+        src = _read_app_js()
+        body = _slice(src, "function prePreencherFormulario(atleta)", "const ModalConsulta = {")
+        assert re.search(
+            r"el\.value\.trim\(\)\s*\)", body
+        ) or re.search(r"if\s*\(\s*el\.value\.trim\(\)", body), (
+            "prePreencherFormulario deve pular campos já preenchidos "
+            "(el.value.trim() truthy)"
+        )
+
+    def test_pre_preencher_marca_campos_vazios_como_pendentes(self):
+        src = _read_app_js()
+        body = _slice(src, "function prePreencherFormulario(atleta)", "const ModalConsulta = {")
+        assert "needs-fill" in body, (
+            "prePreencherFormulario deve marcar com .needs-fill os "
+            "campos que a Edge retornou vazios"
+        )
+
+    def test_pre_preencher_nao_preeche_cpf_atleta(self):
+        src = _read_app_js()
+        body = _slice(src, "function prePreencherFormulario(atleta)", "const ModalConsulta = {")
+        assert "'inp-cpf-atleta'" not in body, (
+            "prePreencherFormulario NÃO deve tocar em inp-cpf-atleta — "
+            "é a chave de lookup e não pode ser editada"
+        )
+
+    def test_pre_preencher_nao_preeche_cpf_responsavel(self):
+        src = _read_app_js()
+        body = _slice(src, "function prePreencherFormulario(atleta)", "const ModalConsulta = {")
+        assert "'inp-cpf-resp'" not in body, (
+            "prePreencherFormulario NÃO deve tocar em inp-cpf-resp — "
+            "é a chave de lookup e não pode ser editada"
+        )
+
+    def test_pre_preencher_marca_modalidades_a_partir_da_lista(self):
+        src = _read_app_js()
+        body = _slice(src, "function prePreencherFormulario(atleta)", "const ModalConsulta = {")
+        assert re.search(
+            r"atleta\.modalidades", body
+        ), (
+            "prePreencherFormulario precisa ler atleta.modalidades "
+            "(string CSV) e marcar os checkboxes correspondentes"
+        )
+        assert "checkbox" in body and "checked" in body, (
+            "prePreencherFormulario precisa iterar os checkboxes "
+            "de modalidade e marcar (checked) os que estão no CSV"
+        )
+
+    def test_pre_preencher_marca_toggle_saude_se_problema_saude_existe(self):
+        src = _read_app_js()
+        body = _slice(src, "function prePreencherFormulario(atleta)", "const ModalConsulta = {")
+        assert "inp-tem-saude" in body, (
+            "prePreencherFormulario precisa sincronizar o toggle "
+            "inp-tem-saude com a presença de problema_saude da Edge"
+        )
+
+
+class TestNeedsFillCSS:
+    """Regressão visual: o prefill adiciona ``.needs-fill`` em inputs
+    que a Edge retornou vazios. Precisa existir regra CSS que
+    destaque esses campos em âmbar — sem ela, o destaque é invisível.
+    """
+
+    def test_style_tem_regra_needs_fill(self):
+        style = (Path(__file__).resolve().parent.parent / "style.css").read_text(encoding="utf-8")
+        assert re.search(
+            r"\.needs-fill\s*\{",
+            style,
+        ), (
+            "style.css precisa de regra para .needs-fill — sem ela, "
+            "o destaque de campos pendentes é invisível"
+        )
+
+    def test_style_needs_fill_usa_cor_ambar_nao_vermelho(self):
+        style = (Path(__file__).resolve().parent.parent / "style.css").read_text(encoding="utf-8")
+        m = re.search(
+            r"\.needs-fill[^{}]*\{([^}]+)\}",
+            style,
+            re.DOTALL,
+        )
+        assert m, "Regra .needs-fill não encontrada"
+        body = m.group(1)
+        assert "border-color" in body, (
+            ".needs-fill precisa de border-color para destacar o input"
+        )
+        assert not re.search(
+            r"#[a-fA-F0-9]{0,2}(?:EF|DC|B9|ef|dc|b9)[a-fA-F0-9]{2}",
+            body,
+        ), (
+            ".needs-fill NÃO deve usar vermelho (reservado para "
+            "erros de validação). Use âmbar para 'pendente'."
+        )

@@ -289,6 +289,32 @@ body::after {
     font-weight: 500;
 }
 
+/* ==================== NEEDS-FILL HIGHLIGHT ====================
+   Aplica-se a inputs/selects/textareas que o prefill detectou
+   como vazios no cadastro original (Edge Function retornou "").
+   O usuário vê a borda âmbar e sabe que precisa preencher aquele
+   campo antes de enviar. Não usar vermelho (reservado para erros
+   de validação após submit) — âmbar é "atenção, falta aqui". */
+.form-group input.needs-fill,
+.form-group select.needs-fill,
+.form-group textarea.needs-fill {
+    border-color: #d97706;
+    background-color: #fffbeb;
+}
+.form-group input.needs-fill:focus,
+.form-group select.needs-fill:focus,
+.form-group textarea.needs-fill:focus {
+    border-color: #b45309;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.15);
+}
+.checkbox-grid input[type="checkbox"].needs-fill + span,
+.checkbox-grid label.needs-fill {
+    outline: 2px solid #d97706;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
 /* ==================== PHOTO UPLOAD ==================== */
 .photo-upload-area {
     display: flex;

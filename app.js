@@ -704,24 +704,83 @@ function abrirFormulario() {
 }
 
 function prePreencherFormulario(atleta) {
-    // Mapeia os campos retornados pela Edge Function para os inputs
-    // do formulário. Apenas preenche se o campo existir e estiver
-    // vazio — não sobrescreve dados digitados manualmente.
+    // Mapeia os campos editáveis retornados pela Edge Function
+    // ``validar-atleta`` para os inputs do formulário. Apenas
+    // preenche se o campo existir e estiver vazio — não sobrescreve
+    // dados digitados manualmente. Campos que a Edge retornou
+    // vazios ficam com classe ``.needs-fill`` para o usuário ver
+    // rapidamente o que ainda precisa preencher.
+    //
+    // Não pré-preenchemos ``inp-cpf-atleta`` nem ``inp-cpf-resp`` —
+    // são chaves de lookup e não podem ser editadas pelo portal.
     const campos = {
+        // Atleta
         'inp-nome': atleta.nome,
         'inp-data-nasc': atleta.data_nascimento,
-        'inp-cpf-atleta': atleta.cpf,
         'inp-rg-atleta': atleta.rg,
+        // Responsável
         'inp-nome-resp': atleta.nome_responsavel,
-        'inp-cpf-resp': atleta.cpf_responsavel,
+        'inp-parentesco': atleta.parentesco,
         'inp-email': atleta.email,
         'inp-telefone': atleta.telefone,
+        // Endereço estruturado
+        'inp-rua': atleta.rua,
+        'inp-numero': atleta.numero,
+        'inp-bairro': atleta.bairro,
+        'inp-cidade': atleta.cidade,
+        'inp-cep': atleta.cep,
+        // Período (select) e saúde (textarea)
+        'inp-periodo': atleta.periodo,
+        'inp-info-saude': atleta.problema_saude,
     };
     for (const [id, valor] of Object.entries(campos)) {
         const el = document.getElementById(id);
-        if (!el || !valor) continue;
+        if (!el) continue;
+        // Não sobrescreve dados que o usuário já tenha digitado
+        // manualmente.
         if (el.value.trim()) continue;
-        el.value = valor;
+        if (valor) {
+            el.value = valor;
+            el.classList.remove('needs-fill');
+        } else {
+            // A Edge não retornou valor para este campo — destaca
+            // visualmente para o usuário preencher.
+            el.classList.add('needs-fill');
+        }
+    }
+
+    // Modalidades: a Edge retorna uma string CSV
+    // ("Futebol, Judô"). Marcamos os checkboxes correspondentes.
+    // Se a string estiver vazia, ativamos o highlight em todos.
+    const modalidadesStr = (atleta.modalidades || '').trim();
+    const selecionadas = modalidadesStr
+        ? new Set(modalidadesStr.split(',').map(s => s.trim()).filter(Boolean))
+        : new Set();
+    const checkboxes = document.querySelectorAll('.checkbox-grid input[type="checkbox"]');
+    let algumaMarcada = false;
+    checkboxes.forEach(cb => {
+        const deve = selecionadas.has(cb.value);
+        cb.checked = deve;
+        if (deve) algumaMarcada = true;
+    });
+    // Se a Edge não retornou modalidades, marca todas as checkboxes
+    // com .needs-fill para o usuário ver que precisa escolher.
+    if (!algumaMarcada) {
+        checkboxes.forEach(cb => cb.classList.add('needs-fill'));
+    } else {
+        checkboxes.forEach(cb => cb.classList.remove('needs-fill'));
+    }
+
+    // Toggle de "tem problema de saúde": se a Edge retornou
+    // ``problema_saude`` não-vazio, marca o checkbox e mostra o
+    // textarea. Caso contrário, deixa o toggle off.
+    const temSaude = document.getElementById('inp-tem-saude');
+    if (temSaude) {
+        const temProblema = !!(atleta.problema_saude && atleta.problema_saude.trim());
+        temSaude.checked = temProblema;
+        // toggleSaude() já existe e ajusta o display do textarea
+        // baseado no estado do checkbox.
+        if (typeof toggleSaude === 'function') toggleSaude();
     }
 }
 
