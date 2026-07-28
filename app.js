@@ -389,12 +389,18 @@ function calculateCategory(dataNascimento) {
 }
 
 function generateProtocol() {
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = String(now.getMonth() + 1).padStart(2, '0');
-    const d = String(now.getDate()).padStart(2, '0');
-    const rand = String(Math.floor(Math.random() * 100000)).padStart(5, '0');
-    return `PRE-${y}${m}${d}-${rand}`;
+    // UUIDv4 (36 chars) para satisfazer a RLS policy anon_insert_cadastros_pendentes
+    // (length(protocolo) = 36). crypto.randomUUID() é nativo em navegadores
+    // modernos (Chrome 92+, Firefox 95+, Safari 15.4+).
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+    }
+    // Fallback para contextos sem crypto.randomUUID (raríssimo em browser).
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = (Math.random() * 16) | 0;
+        const v = c === 'x' ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+    });
 }
 
 function getVal(id) {
