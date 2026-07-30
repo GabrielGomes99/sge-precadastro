@@ -1056,3 +1056,24 @@ function showToast(message, type = 'success') {
         if (toast.parentNode) toast.parentNode.removeChild(toast);
     }, 4000);
 }
+
+// ==================== WHATSAPP POPUP ====================
+function toggleWhatsappPopup(open) {
+    const overlay = document.getElementById('whatsapp-overlay');
+    const popup = document.getElementById('whatsapp-popup');
+    if (!overlay || !popup) return;
+    if (open) {
+        overlay.classList.add('is-open');
+        popup.classList.add('is-open');
+        popup.setAttribute('aria-hidden', 'false');
+    } else {
+        overlay.classList.remove('is-open');
+        popup.classList.remove('is-open');
+        popup.setAttribute('aria-hidden', 'true');
+    }
+}
+
+// Fecha o popup com a tecla ESC
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') toggleWhatsappPopup(false);
+});
