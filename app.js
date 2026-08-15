@@ -1294,6 +1294,7 @@ function validateFormInstrutor() {
     requireField('inp-data-nasc-instr', 'data-nasc-instr', 'Data de nascimento');
     requireField('inp-funcao', 'funcao', 'Função / Cargo');
     requireField('inp-periodo-instr', 'periodo-instr', 'Período');
+    requireField('inp-nucleo-instr', 'nucleo-instr', 'Núcleo');
     requireField('inp-email-instr', 'email-instr', 'E-mail');
     requireField('inp-telefone-instr', 'telefone-instr', 'Telefone');
     requireField('inp-rua-instr', 'rua-instr', 'Rua');
@@ -1387,8 +1388,11 @@ async function enviarPreCadastroInstrutor() {
             data_nascimento: dataNasc,
             idade,
             categoria: 'Instrutor',
-            funcao: getVal('inp-funcao'),
+            // ``funcao`` no form mapeia para ``formacao`` no banco
+            // (a Edge e o ``mapearInstrutor`` mantêm o alias).
+            formacao: getVal('inp-funcao'),
             periodo: getVal('inp-periodo-instr'),
+            nucleo: getVal('inp-nucleo-instr'),
             email: getVal('inp-email-instr'),
             telefone: getVal('inp-telefone-instr'),
             endereco,
