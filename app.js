@@ -283,6 +283,17 @@ function validateForm() {
         }
     }
 
+    // Foto é obrigatória, exceto quando o atleta já tem foto_url
+    // carregada via ``renderUploadPreview`` (fluxo de atualização:
+    // o usuário pode manter a foto atual sem re-upload).
+    const fotoInput = document.getElementById('inp-foto');
+    const hasExistingPhoto = fotoInput && fotoInput.parentElement.querySelector('.upload-preview');
+    if (!fotoFile && !hasExistingPhoto) {
+        const errEl = document.getElementById('err-foto');
+        if (errEl) errEl.textContent = 'Selecione a foto do atleta';
+        valid = false;
+    }
+
     requireField('nome', 'Nome completo');
     requireField('data-nasc', 'Data de nascimento');
     requireField('cpf-atleta', 'CPF do atleta');
