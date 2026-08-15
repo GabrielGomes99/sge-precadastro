@@ -10,6 +10,13 @@ const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const MODALIDADES_INEC = ['Futebol'];
 const MODALIDADES_NEC = ['Judô', 'Jiu-Jitsu', 'Balé', 'Forró', 'Hip Hop', 'Zumba', 'Vôlei', 'Futsal', 'X1', 'Basquete', 'Tênis de Mesa', 'Handball'];
 
+// Tipo de pré-cadastro em andamento ('atleta' | 'instrutor'). Setado
+// pelo modal inicial ``#modal-selecao-tipo`` e lido por ``novoCadastro``
+// para decidir qual form deve ser limpo após o envio. Mantido aqui
+// (no topo) para ficar disponível antes de qualquer função que o
+// referencie.
+let tipoCadastro = null;
+
 // Tradução amigável das chaves de pendência retornadas pela Edge
 // Function ``validar-atleta`` em ``data.pendencias`` (string[]).
 // O modal de consulta INCOMPLETO lista essas strings traduzidas
@@ -31,6 +38,10 @@ const PENDENCIAS_TRADUZIDAS = {
     foto_url: 'Foto do atleta',
     doc_aluno_url: 'Documento de identidade do atleta',
     doc_resp_url: 'Documento de identidade do responsável',
+    // Chaves do instrutor (a Edge ``validar-atleta`` emite a mesma
+    // nomenclatura, independente do tipo — ver Edge Function).
+    funcao: 'Função / Cargo do instrutor',
+    doc_instrutor_url: 'Documento de identidade do instrutor',
     endereco: 'Endereço completo',
     rua: 'Rua',
     numero: 'Número',
@@ -49,6 +60,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initModalidades();
     initInputMasks();
     initConsultaMasks();
+    initModalSelecaoTipo();
+    initInputMasksInstrutor();
 });
 
 function initConsultaMasks() {
@@ -488,6 +501,7 @@ async function enviarPreCadastro() {
             : '';
 
         const payload = {
+            tipo: 'atleta',
             nome: getVal('inp-nome'),
             rg: getVal('inp-rg-atleta'),
             cpf: extrairDigitos(getVal('inp-cpf-atleta')),
@@ -525,6 +539,11 @@ async function enviarPreCadastro() {
         showLoading(false);
         limparFormulario();
         document.getElementById('protocolo-number').textContent = protocolo;
+        const badgeSucesso = document.getElementById('badge-tipo-sucesso');
+        if (badgeSucesso) {
+            badgeSucesso.dataset.tipo = tipoCadastro || 'atleta';
+            badgeSucesso.textContent = tipoCadastro === 'instrutor' ? 'INSTRUTOR' : 'ATLETA';
+        }
         document.getElementById('modal-sucesso').classList.add('active');
 
     } catch (err) {
@@ -567,11 +586,99 @@ function limparFormulario() {
 // ==================== MODAL SUCESSO ====================
 function fecharModal() {
     document.getElementById('modal-sucesso').classList.remove('active');
+    // Volta o usuário ao seletor de tipo para que o próximo
+    // cadastro seja escolhido conscientemente (atleta ou instrutor).
+    resetarParaSelecaoTipo();
 }
 
 function novoCadastro() {
     fecharModal();
-    limparFormulario();
+    if (tipoCadastro === 'instrutor') limparFormularioInstrutor();
+    else limparFormulario();
+}
+
+// ==================== SELEÇÃO DE TIPO (ATLETA / INSTRUTOR) ====================
+//
+// Variável global ``tipoCadastro`` controla qual form é renderizado
+// (``#form-precadastro`` ou ``#form-instrutor``) e qual pipeline de
+// envio/validação roda. É setada pelo modal inicial. Toda a UI
+// abaixo do header fica oculta até o usuário escolher um tipo.
+//
+// Declarada no topo do arquivo (antes de ``novoCadastro`` que a
+// referencia) para evitar TDZ em engines que validam escopo léxico.
+function initModalSelecaoTipo() {
+    const overlay = document.getElementById('modal-selecao-tipo');
+    if (!overlay) return;
+
+    const cards = overlay.querySelectorAll('.tipo-card');
+    const btnContinuar = document.getElementById('btn-continuar-tipo');
+
+    cards.forEach(card => {
+        card.addEventListener('click', () => {
+            cards.forEach(c => c.setAttribute('aria-pressed', 'false'));
+            card.setAttribute('aria-pressed', 'true');
+            if (btnContinuar) btnContinuar.disabled = false;
+        });
+    });
+
+    if (btnContinuar) {
+        btnContinuar.addEventListener('click', () => {
+            const selected = overlay.querySelector('.tipo-card[aria-pressed="true"]');
+            if (!selected) return;
+            const tipo = selected.dataset.tipo;
+            confirmarSelecaoTipo(tipo);
+        });
+    }
+}
+
+function confirmarSelecaoTipo(tipo) {
+    tipoCadastro = tipo;
+    const overlay = document.getElementById('modal-selecao-tipo');
+    if (overlay) overlay.classList.add('hidden');
+
+    // Badge no header: revela e ajusta label/cor
+    const badgeHeader = document.getElementById('badge-tipo');
+    if (badgeHeader) {
+        badgeHeader.hidden = false;
+        badgeHeader.dataset.tipo = tipo;
+        badgeHeader.textContent = tipo === 'instrutor' ? 'INSTRUTOR' : 'ATLETA';
+    }
+    const prefixo = document.getElementById('header-prefixo');
+    if (prefixo) {
+        prefixo.textContent = tipo === 'instrutor'
+            ? 'Pré-cadastro de Instrutor'
+            : 'Pré-cadastro do Atleta';
+    }
+
+    if (tipo === 'instrutor') {
+        abrirFormularioInstrutor();
+    } else {
+        // Atleta: comportamento atual — o form só abre após a
+        // pré-consulta de CPF retornar estado NOVO ou INCOMPLETO.
+        // Não esconde o card de consulta; ele já é visível por padrão
+        // e o usuário digita os CPFs nele.
+    }
+}
+
+function resetarParaSelecaoTipo() {
+    tipoCadastro = null;
+    const overlay = document.getElementById('modal-selecao-tipo');
+    if (overlay) {
+        overlay.classList.remove('hidden');
+        const cards = overlay.querySelectorAll('.tipo-card');
+        cards.forEach(c => c.setAttribute('aria-pressed', 'false'));
+        const btn = document.getElementById('btn-continuar-tipo');
+        if (btn) btn.disabled = true;
+    }
+    const badgeHeader = document.getElementById('badge-tipo');
+    if (badgeHeader) badgeHeader.hidden = true;
+    const prefixo = document.getElementById('header-prefixo');
+    if (prefixo) prefixo.textContent = 'Pré-cadastro';
+
+    const formAtleta = document.getElementById('form-precadastro');
+    if (formAtleta) formAtleta.style.display = 'none';
+    const formInstr = document.getElementById('form-instrutor');
+    if (formInstr) formInstr.style.display = 'none';
 }
 
 // ==================== CONSULTA / MODAL ESTADO ====================
@@ -1088,3 +1195,260 @@ function toggleWhatsappPopup(open) {
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') toggleWhatsappPopup(false);
 });
+
+// ==================== INSTRUTOR (PIPELINE COMPLETO) ====================
+//
+// Estado local de arquivos do form-instrutor. Mantido em variáveis
+// separadas para não colidir com ``fotoFile`` / ``docAlunoFile`` /
+// ``docRespFile`` usados pelo atleta.
+let fotoFileInstr = null;
+let docInstrFile = null;
+
+function initInputMasksInstrutor() {
+    // Mesmas máscaras do atleta. IDs diferentes, comportamento igual.
+    const pairs = [
+        ['inp-cpf-instr', maskCPF],
+        ['inp-rg-instr', maskRG],
+        ['inp-telefone-instr', maskPhone],
+        ['inp-data-nasc-instr', maskDate],
+        ['inp-cep-instr', maskCEP],
+    ];
+    for (const [id, fn] of pairs) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        el.addEventListener('input', (e) => {
+            const pos = el.selectionStart;
+            const oldLen = el.value.length;
+            el.value = fn(el.value);
+            const newLen = el.value.length;
+            el.setSelectionRange(pos + (newLen - oldLen), pos + (newLen - oldLen));
+        });
+    }
+}
+
+function handlePhotoSelectInstr(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('A foto deve ter no máximo 5MB.', 'error');
+        input.value = '';
+        return;
+    }
+    fotoFileInstr = file;
+    document.getElementById('foto-file-name-instr').textContent = file.name;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        document.getElementById('photo-preview-instr').innerHTML =
+            `<img src="${e.target.result}" alt="Preview">`;
+    };
+    reader.readAsDataURL(file);
+}
+
+function handleDocSelectInstr(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    if (file.size > 10 * 1024 * 1024) {
+        showToast('O documento deve ter no máximo 10MB.', 'error');
+        input.value = '';
+        return;
+    }
+    docInstrFile = file;
+    document.getElementById('doc-instr-status').textContent = file.name;
+    document.getElementById('doc-instr-card').classList.add('has-file');
+}
+
+// Regex para Função/Cargo: letras (com acentos) e espaços, hífen,
+// barra e "de/da/do". Não aceita números nem símbolos estranhos.
+function validateFuncao(value) {
+    if (!value) return false;
+    const trimmed = value.trim();
+    if (trimmed.length < 3 || trimmed.length > 80) return false;
+    return /^[A-Za-zÀ-ÿ\s\-\/]+$/.test(trimmed);
+}
+
+function validateFormInstrutor() {
+    clearErrors();
+    let valid = true;
+
+    function requireField(inputId, errId, label) {
+        const inp = document.getElementById(inputId);
+        if (!inp) return;
+        const val = inp.value.trim();
+        if (!val) {
+            setError(errId, `${label} é obrigatório`);
+            valid = false;
+        }
+    }
+
+    requireField('inp-nome-instr', 'nome-instr', 'Nome completo');
+
+    const cpfDigits = extrairDigitos(document.getElementById('inp-cpf-instr').value);
+    if (!cpfDigits) {
+        setError('cpf-instr', 'CPF é obrigatório');
+        valid = false;
+    } else if (!validateCPF(cpfDigits)) {
+        setError('cpf-instr', 'CPF inválido');
+        valid = false;
+    }
+
+    requireField('inp-data-nasc-instr', 'data-nasc-instr', 'Data de nascimento');
+    requireField('inp-funcao', 'funcao', 'Função / Cargo');
+    requireField('inp-periodo-instr', 'periodo-instr', 'Período');
+    requireField('inp-email-instr', 'email-instr', 'E-mail');
+    requireField('inp-telefone-instr', 'telefone-instr', 'Telefone');
+    requireField('inp-rua-instr', 'rua-instr', 'Rua');
+    requireField('inp-numero-instr', 'numero-instr', 'Número');
+    requireField('inp-bairro-instr', 'bairro-instr', 'Bairro');
+    requireField('inp-cidade-instr', 'cidade-instr', 'Cidade');
+    requireField('inp-cep-instr', 'cep-instr', 'CEP');
+
+    // Validação específica do e-mail
+    const email = document.getElementById('inp-email-instr').value.trim();
+    if (email && !validateEmail(email)) {
+        setError('email-instr', 'E-mail inválido');
+        valid = false;
+    }
+
+    // Validação específica de função (regex)
+    const funcao = document.getElementById('inp-funcao').value.trim();
+    if (funcao && !validateFuncao(funcao)) {
+        setError('funcao', 'Use apenas letras e espaços (3 a 80 caracteres)');
+        valid = false;
+    }
+
+    // Data de nascimento: mesmo formato dd/mm/aaaa do atleta
+    const dataNasc = document.getElementById('inp-data-nasc-instr').value.trim();
+    if (dataNasc) {
+        const parts = dataNasc.split('/');
+        if (parts.length !== 3 || parts[0].length !== 2 || parts[1].length !== 2 || parts[2].length !== 4) {
+            setError('data-nasc-instr', 'Data inválida (dd/mm/aaaa)');
+            valid = false;
+        } else {
+            const d = parseInt(parts[0]), m = parseInt(parts[1]), y = parseInt(parts[2]);
+            const date = new Date(y, m - 1, d);
+            if (date.getDate() !== d || date.getMonth() !== m - 1 || date.getFullYear() !== y || date > new Date()) {
+                setError('data-nasc-instr', 'Data inválida ou futura');
+                valid = false;
+            }
+        }
+    }
+
+    // Foto obrigatória
+    if (!fotoFileInstr) {
+        const errEl = document.getElementById('err-foto-instr');
+        if (errEl) errEl.textContent = 'Selecione a foto do instrutor';
+        valid = false;
+    }
+
+    // Aceite
+    if (!document.getElementById('inp-aceite-instr').checked) {
+        setError('aceite-instr', 'É necessário aceitar os termos');
+        valid = false;
+    }
+
+    return valid;
+}
+
+async function enviarPreCadastroInstrutor() {
+    if (!validateFormInstrutor()) {
+        showToast('Corrija os campos destacados em vermelho.', 'error');
+        const firstError = document.querySelector('.input-error');
+        if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
+
+    showLoading(true);
+
+    try {
+        const [fotoUrl, docUrl] = await Promise.all([
+            uploadFileToStorage(fotoFileInstr, 'instrutores/fotos'),
+            uploadFileToStorage(docInstrFile, 'instrutores/documentos'),
+        ]);
+
+        const dataNasc = getVal('inp-data-nasc-instr');
+        const idade = calculateAge(dataNasc);
+        const protocolo = generateProtocol();
+
+        const endereco = [
+            getVal('inp-rua-instr'),
+            getVal('inp-numero-instr'),
+            getVal('inp-bairro-instr'),
+            getVal('inp-cidade-instr'),
+            getVal('inp-cep-instr'),
+        ].filter(Boolean).join(', ');
+
+        const dataEnvio = new Date().toLocaleDateString('pt-BR');
+
+        const payload = {
+            tipo: 'instrutor',
+            nome: getVal('inp-nome-instr'),
+            cpf: extrairDigitos(getVal('inp-cpf-instr')),
+            rg: getVal('inp-rg-instr'),
+            data_nascimento: dataNasc,
+            idade,
+            categoria: 'Instrutor',
+            funcao: getVal('inp-funcao'),
+            periodo: getVal('inp-periodo-instr'),
+            email: getVal('inp-email-instr'),
+            telefone: getVal('inp-telefone-instr'),
+            endereco,
+            status_pendente: 'pendente',
+            protocolo,
+            data_envio: dataEnvio,
+            foto_url: fotoUrl,
+            doc_instrutor_url: docUrl,
+        };
+
+        const { error } = await supabaseClient
+            .from('cadastros_pendentes')
+            .insert(payload);
+
+        if (error) throw error;
+
+        document.getElementById('protocolo-number').textContent = protocolo;
+        const badgeSucesso = document.getElementById('badge-tipo-sucesso');
+        if (badgeSucesso) {
+            badgeSucesso.dataset.tipo = 'instrutor';
+            badgeSucesso.textContent = 'INSTRUTOR';
+        }
+        document.getElementById('modal-sucesso').classList.add('active');
+
+    } catch (err) {
+        console.error('Erro ao enviar pré-cadastro de instrutor:', err);
+        showToast('Erro ao enviar pré-cadastro. Tente novamente.', 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+function abrirFormularioInstrutor() {
+    // Sem pré-consulta para instrutor: mostra o form direto.
+    const form = document.getElementById('form-instrutor');
+    if (form) form.style.display = '';
+    const consulta = document.getElementById('consulta-card');
+    if (consulta) consulta.style.display = 'none';
+    if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function limparFormularioInstrutor() {
+    const form = document.getElementById('form-instrutor');
+    if (form) form.reset();
+    clearErrors();
+
+    fotoFileInstr = null;
+    docInstrFile = null;
+
+    const preview = document.getElementById('photo-preview-instr');
+    if (preview) {
+        preview.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+            <span class="photo-placeholder-text">Clique para selecionar</span>
+        `;
+    }
+    const fileName = document.getElementById('foto-file-name-instr');
+    if (fileName) fileName.textContent = '';
+    const docStatus = document.getElementById('doc-instr-status');
+    if (docStatus) docStatus.textContent = 'Nenhum arquivo selecionado';
+    const docCard = document.getElementById('doc-instr-card');
+    if (docCard) docCard.classList.remove('has-file');
+}

@@ -1322,3 +1322,192 @@ body::after {
         margin: 0 auto;
     }
 }
+
+/* ==================== MODAL SELEÇÃO DE TIPO ==================== */
+/*
+    Tela inicial. Mostra 2 cards grandes (atleta / instrutor). O
+    botão "Continuar" fica desabilitado até uma opção ser marcada.
+    ``.modal-tipo-overlay`` usa position fixed para travar o scroll
+    e bloquear interação com o resto do <main> via
+    ``pointer-events: none`` no overlay após fechar.
+*/
+.modal-tipo-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(8, 12, 24, 0.78);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: fadeIn 0.25s ease;
+}
+
+.modal-tipo-overlay.hidden {
+    display: none;
+}
+
+.modal-tipo-card {
+    background: linear-gradient(135deg, #0d1428 0%, #131b30 100%);
+    border: 1px solid rgba(0, 198, 255, 0.18);
+    border-radius: 24px;
+    padding: 40px 32px;
+    max-width: 760px;
+    width: 100%;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+    text-align: center;
+}
+
+.modal-tipo-titulo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 1.5px;
+    color: #fff;
+    margin: 0 0 8px;
+}
+
+.modal-tipo-subtitulo {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin: 0 0 32px;
+}
+
+.modal-tipo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+@media (max-width: 600px) {
+    .modal-tipo-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.tipo-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 28px 20px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 2px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-family: inherit;
+}
+
+.tipo-card:hover {
+    border-color: rgba(0, 198, 255, 0.4);
+    background: rgba(0, 198, 255, 0.05);
+    transform: translateY(-2px);
+}
+
+.tipo-card[aria-pressed="true"] {
+    border-color: var(--accent);
+    background: rgba(0, 198, 255, 0.1);
+    color: #fff;
+    box-shadow: 0 0 24px rgba(0, 198, 255, 0.25);
+}
+
+.tipo-card[data-tipo="instrutor"][aria-pressed="true"] {
+    border-color: var(--success);
+    background: rgba(16, 185, 129, 0.1);
+    box-shadow: 0 0 24px rgba(16, 185, 129, 0.25);
+}
+
+.tipo-card-icon {
+    color: var(--accent);
+}
+
+.tipo-card[data-tipo="instrutor"][aria-pressed="true"] .tipo-card-icon {
+    color: var(--success);
+}
+
+.tipo-card-titulo {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #fff;
+}
+
+.tipo-card-descricao {
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--text-muted);
+}
+
+.modal-tipo-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+.modal-tipo-actions .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: grayscale(0.4);
+}
+
+/* ==================== BADGE DE TIPO ==================== */
+/*
+    Pill pequena para identificar o tipo de pré-cadastro em
+    andamento. Usada no header (H1) e no modal de sucesso.
+    ``data-tipo="atleta"`` usa accent (azul); ``data-tipo="instrutor"``
+    usa success (verde).
+*/
+.badge-tipo {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    margin-left: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    border-radius: 999px;
+    vertical-align: middle;
+    background: rgba(0, 198, 255, 0.15);
+    color: var(--accent);
+    border: 1px solid rgba(0, 198, 255, 0.4);
+}
+
+.badge-tipo[data-tipo="instrutor"] {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--success);
+    border-color: rgba(16, 185, 129, 0.4);
+}
+
+.badge-tipo[hidden] {
+    display: none;
+}
+
+#modal-sucesso .badge-tipo {
+    margin: 12px auto 0;
+    padding: 6px 18px;
+    font-size: 12px;
+    letter-spacing: 2px;
+}
+
+/* ==================== HEADER COM BADGE ==================== */
+.header-text h1 {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.header-text h1 #header-prefixo {
+    margin-right: 0;
+}
+
+@media (max-width: 600px) {
+    .header-text h1 .badge-tipo {
+        margin-left: 0;
+        margin-top: 4px;
+    }
+}
