@@ -12,3 +12,6 @@ Thumbs.db
 
 # Node (caso adicionado futuramente)
 node_modules/
+
+# Supabase CLI scratch (gerado por `supabase db push`/deploy/inspect)
+supabase/.temp/

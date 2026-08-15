@@ -1453,19 +1453,17 @@ body::after {
     filter: grayscale(0.4);
 }
 
-/* ==================== BADGE DE TIPO ==================== */
+/* ==================== BADGE DE TIPO (MODAL DE SUCESSO) ==================== */
 /*
-    Pill pequena para identificar o tipo de pré-cadastro em
-    andamento. Usada no header (H1) e no modal de sucesso.
-    ``data-tipo="atleta"`` usa accent (azul); ``data-tipo="instrutor"``
-    usa success (verde).
+    Pill pequena no modal de sucesso, mostrando se o cadastro enviado
+    é de Atleta ou Instrutor. ``data-tipo="atleta"`` usa accent
+    (azul); ``data-tipo="instrutor"`` usa success (verde).
 */
 .badge-tipo {
     display: inline-flex;
     align-items: center;
     gap: 4px;
     padding: 4px 12px;
-    margin-left: 12px;
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 1.5px;
@@ -1482,32 +1480,9 @@ body::after {
     border-color: rgba(16, 185, 129, 0.4);
 }
 
-.badge-tipo[hidden] {
-    display: none;
-}
-
 #modal-sucesso .badge-tipo {
     margin: 12px auto 0;
     padding: 6px 18px;
     font-size: 12px;
     letter-spacing: 2px;
-}
-
-/* ==================== HEADER COM BADGE ==================== */
-.header-text h1 {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 4px;
-}
-
-.header-text h1 #header-prefixo {
-    margin-right: 0;
-}
-
-@media (max-width: 600px) {
-    .header-text h1 .badge-tipo {
-        margin-left: 0;
-        margin-top: 4px;
-    }
 }

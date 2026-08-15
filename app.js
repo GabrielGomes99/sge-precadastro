@@ -636,20 +636,6 @@ function confirmarSelecaoTipo(tipo) {
     const overlay = document.getElementById('modal-selecao-tipo');
     if (overlay) overlay.classList.add('hidden');
 
-    // Badge no header: revela e ajusta label/cor
-    const badgeHeader = document.getElementById('badge-tipo');
-    if (badgeHeader) {
-        badgeHeader.hidden = false;
-        badgeHeader.dataset.tipo = tipo;
-        badgeHeader.textContent = tipo === 'instrutor' ? 'INSTRUTOR' : 'ATLETA';
-    }
-    const prefixo = document.getElementById('header-prefixo');
-    if (prefixo) {
-        prefixo.textContent = tipo === 'instrutor'
-            ? 'Pré-cadastro de Instrutor'
-            : 'Pré-cadastro do Atleta';
-    }
-
     if (tipo === 'instrutor') {
         abrirFormularioInstrutor();
     } else {
@@ -670,10 +656,6 @@ function resetarParaSelecaoTipo() {
         const btn = document.getElementById('btn-continuar-tipo');
         if (btn) btn.disabled = true;
     }
-    const badgeHeader = document.getElementById('badge-tipo');
-    if (badgeHeader) badgeHeader.hidden = true;
-    const prefixo = document.getElementById('header-prefixo');
-    if (prefixo) prefixo.textContent = 'Pré-cadastro';
 
     const formAtleta = document.getElementById('form-precadastro');
     if (formAtleta) formAtleta.style.display = 'none';
