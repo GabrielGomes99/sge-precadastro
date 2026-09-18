@@ -4,746 +4,1339 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pré-cadastro de Aluno / Atleta — INEC & NEC</title>
+    <title>Pré-cadastro — INEC & NEC</title>
     <meta name="description"
-        content="Formulário de pré-cadastro de alunos e atletas do Instituto Nosso Esporte Clube (INEC) e Nosso Esporte Clube (NEC).">
+        content="Portal de pré-cadastro e matrículas de atletas e instrutores do Instituto Nosso Esporte Clube (INEC) e Nosso Esporte Clube (NEC).">
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
     <link rel="apple-touch-icon" href="favicon-32.png">
+
+    <!-- Fonts: Montserrat (Headlines), Hanken Grotesk (Body), Material Symbols Outlined -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&display=swap"
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Hanken+Grotesk:wght@400;500;600&display=swap"
         rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet">
+
+    <!-- Tailwind CSS with Civic Athletic Design System tokens -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#006194",
+                        "primary-container": "#007bb9",
+                        "on-primary": "#ffffff",
+                        "on-primary-container": "#fdfcff",
+                        "primary-fixed": "#cce5ff",
+                        "primary-fixed-dim": "#93ccff",
+                        "secondary": "#795900",
+                        "secondary-container": "#ffc329",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-container": "#6f5100",
+                        "secondary-fixed": "#ffdf9f",
+                        "tertiary": "#006577",
+                        "tertiary-container": "#008096",
+                        "tertiary-fixed": "#acedff",
+                        "surface": "#faf8ff",
+                        "surface-container": "#eaedff",
+                        "surface-container-low": "#f2f3ff",
+                        "surface-container-high": "#e2e7ff",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-variant": "#dae2fd",
+                        "on-surface": "#131b2e",
+                        "on-surface-variant": "#3f4850",
+                        "outline": "#707881",
+                        "outline-variant": "#bfc7d2",
+                        "error": "#ba1a1a",
+                        "error-container": "#ffdad6"
+                    },
+                    fontFamily: {
+                        "headline": ["Montserrat", "sans-serif"],
+                        "body": ["Hanken Grotesk", "sans-serif"]
+                    }
+                }
+            }
+        };
+    </script>
+    <!-- HTML2PDF & QRCode libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
+<body class="bg-surface font-body text-on-surface antialiased">
+
+    <!-- ==================== TOP NAVIGATION HEADER ==================== -->
+    <header class="fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-xl border-b border-outline-variant/30 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+        <div class="h-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3 flex-shrink-0 cursor-pointer" onclick="resetarParaSelecaoTipo()">
+                <div class="flex items-center gap-2">
+                    <img src="img/LogoINEC.png" alt="Logo INEC" class="h-9 sm:h-10 w-auto object-contain">
+                    <img src="img/logoNEC.png" alt="Logo NEC" class="h-9 sm:h-10 w-auto object-contain">
+                </div>
+                <div class="flex flex-col">
+                    <span class="font-headline font-bold text-base sm:text-lg text-primary tracking-tight leading-none">INEC &amp; NEC</span>
+                    <span class="text-[10px] sm:text-[11px] text-on-surface-variant font-medium tracking-wide uppercase">Nosso Esporte Clube</span>
+                </div>
+            </div>
+
+            <!-- Desktop Nav (≥ 1024px / lg e xl) -->
+            <nav class="hidden lg:flex xl:flex items-center gap-2">
+                <!-- Início & Consulta Direct Link -->
+                <button type="button" onclick="resetarParaSelecaoTipo()"
+                    class="text-on-surface-variant hover:text-primary hover:bg-surface-container font-semibold text-xs 2xl:text-sm transition-colors py-2 px-3 rounded-xl flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
+                    <span class="material-symbols-outlined text-[18px]">home</span>
+                    <span>Início &amp; Consulta</span>
+                </button>
+
+                <!-- Dropdown: Pré-Cadastro (Tree Root) -->
+                <div class="relative nav-dropdown-root" id="dropdown-precadastro-root">
+                    <button type="button" id="btn-dropdown-precadastro" onclick="toggleNavDropdown('precadastro', event)"
+                        aria-expanded="false" aria-haspopup="true"
+                        class="nav-dropdown-trigger text-on-surface-variant hover:text-primary hover:bg-surface-container font-semibold text-xs 2xl:text-sm transition-all py-2 px-3 rounded-xl flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
+                        <span class="material-symbols-outlined text-[18px] text-primary">app_registration</span>
+                        <span>Pré-Cadastro</span>
+                        <span class="material-symbols-outlined text-[18px] nav-chevron transition-transform duration-200">expand_more</span>
+                    </button>
+
+                    <!-- Dropdown Subaba estilo File Tree -->
+                    <div class="nav-dropdown-menu hidden absolute top-full left-0 mt-2 w-64 bg-surface-container-lowest/95 backdrop-blur-xl rounded-2xl border border-slate-200 shadow-xl p-2.5 z-50 animate-fadeIn"
+                        id="menu-dropdown-precadastro" role="menu">
+                        <div class="px-2.5 py-1.5 mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 border-b border-slate-100">
+                            <span class="material-symbols-outlined text-[14px]">account_tree</span>
+                            <span>Fichas de Inscrição</span>
+                        </div>
+                        <div class="file-tree-container relative pl-2 space-y-1">
+                            <button type="button" onclick="selecionarSubMenu('atleta')" role="menuitem"
+                                class="nav-tree-item relative w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:text-primary hover:bg-sky-50 transition-all text-left group">
+                                <span class="text-slate-300 font-mono text-sm leading-none flex-shrink-0">├─</span>
+                                <span class="material-symbols-outlined text-[18px] text-primary group-hover:scale-110 transition-transform">sports_soccer</span>
+                                <div class="flex flex-col min-w-0">
+                                    <span class="leading-snug text-slate-800 group-hover:text-primary">Pré-Cadastro Atleta</span>
+                                    <span class="text-[10px] text-slate-400 font-normal">Alunos e novos beneficiários</span>
+                                </div>
+                            </button>
+
+                            <button type="button" onclick="selecionarSubMenu('instrutor')" role="menuitem"
+                                class="nav-tree-item relative w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:text-primary hover:bg-sky-50 transition-all text-left group">
+                                <span class="text-slate-300 font-mono text-sm leading-none flex-shrink-0">└─</span>
+                                <span class="material-symbols-outlined text-[18px] text-secondary group-hover:scale-110 transition-transform">sports</span>
+                                <div class="flex flex-col min-w-0">
+                                    <span class="leading-snug text-slate-800 group-hover:text-primary">Pré-Cadastro Instrutor</span>
+                                    <span class="text-[10px] text-slate-400 font-normal">Professores e comissão técnica</span>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dropdown: Carteirinha (Tree Root) -->
+                <div class="relative nav-dropdown-root" id="dropdown-carteirinha-root">
+                    <button type="button" id="btn-dropdown-carteirinha" onclick="toggleNavDropdown('carteirinha', event)"
+                        aria-expanded="false" aria-haspopup="true"
+                        class="nav-dropdown-trigger text-on-surface-variant hover:text-primary hover:bg-surface-container font-semibold text-xs 2xl:text-sm transition-all py-2 px-3 rounded-xl flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
+                        <span class="material-symbols-outlined text-[18px] text-primary">badge</span>
+                        <span>Carteirinha</span>
+                        <span class="material-symbols-outlined text-[18px] nav-chevron transition-transform duration-200">expand_more</span>
+                    </button>
+
+                    <!-- Dropdown Subaba estilo File Tree -->
+                    <div class="nav-dropdown-menu hidden absolute top-full left-0 mt-2 w-64 bg-surface-container-lowest/95 backdrop-blur-xl rounded-2xl border border-slate-200 shadow-xl p-2.5 z-50 animate-fadeIn"
+                        id="menu-dropdown-carteirinha" role="menu">
+                        <div class="px-2.5 py-1.5 mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 border-b border-slate-100">
+                            <span class="material-symbols-outlined text-[14px]">id_card</span>
+                            <span>Credencial Oficial</span>
+                        </div>
+                        <div class="file-tree-container relative pl-2 space-y-1">
+                            <button type="button" onclick="selecionarSubMenu('carteirinha')" role="menuitem"
+                                class="nav-tree-item relative w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:text-primary hover:bg-sky-50 transition-all text-left group">
+                                <span class="text-slate-300 font-mono text-sm leading-none flex-shrink-0">├─</span>
+                                <span class="material-symbols-outlined text-[18px] text-primary group-hover:scale-110 transition-transform">badge</span>
+                                <div class="flex flex-col min-w-0">
+                                    <span class="leading-snug text-slate-800 group-hover:text-primary">Carteirinha Digital</span>
+                                    <span class="text-[10px] text-slate-400 font-normal">Personalizar e baixar PDF</span>
+                                </div>
+                            </button>
+
+                            <a href="verificar.html" role="menuitem"
+                                class="nav-tree-item relative w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:text-emerald-700 hover:bg-emerald-50 transition-all text-left group">
+                                <span class="text-slate-300 font-mono text-sm leading-none flex-shrink-0">└─</span>
+                                <span class="material-symbols-outlined text-[18px] text-emerald-600 group-hover:scale-110 transition-transform">verified</span>
+                                <div class="flex flex-col min-w-0">
+                                    <span class="leading-snug text-slate-800 group-hover:text-emerald-700">Verificar Carteirinha (QR)</span>
+                                    <span class="text-[10px] text-slate-400 font-normal">Checar validade e vigência</span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Actions on right -->
+            <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                <button type="button" onclick="toggleWhatsappPopup(true)"
+                    class="hidden md:inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors text-xs font-semibold whitespace-nowrap">
+                    <span class="material-symbols-outlined text-primary text-[18px]">support_agent</span>
+                    <span class="hidden 2xl:inline">Suporte WhatsApp</span>
+                    <span class="2xl:hidden">Suporte</span>
+                </button>
+                <a href="http://localhost:3000" target="_blank" rel="noopener noreferrer"
+                    class="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary hover:bg-primary-container text-on-primary text-xs sm:text-sm font-semibold transition-all shadow-sm whitespace-nowrap">
+                    <span class="material-symbols-outlined text-[18px]">lock</span>
+                    <span>Área Restrita</span>
+                </a>
+                <!-- Mobile Hamburger Button (< lg) -->
+                <button type="button" id="btn-toggle-mobile-menu" onclick="toggleMobileSidebar(true)" aria-label="Abrir menu de navegação"
+                    class="lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors">
+                    <span class="material-symbols-outlined text-[24px]">menu</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== MOBILE NAVIGATION DRAWER (SIDEBAR) ==================== -->
+    <div id="mobile-sidebar-overlay" class="mobile-sidebar-overlay" onclick="toggleMobileSidebar(false)" aria-hidden="true"></div>
+    <aside id="mobile-sidebar" class="mobile-sidebar-drawer" role="dialog" aria-modal="true" aria-label="Menu de Navegação Lateral">
+        <div class="mobile-sidebar-header">
+            <div class="flex items-center gap-2">
+                <img src="img/LogoINEC.png" alt="INEC" class="h-8 w-auto">
+                <img src="img/logoNEC.png" alt="NEC" class="h-8 w-auto">
+                <div class="flex flex-col">
+                    <span class="font-headline font-bold text-sm text-primary leading-tight">INEC &amp; NEC</span>
+                    <span class="text-[10px] text-on-surface-variant uppercase font-medium">Menu Principal</span>
+                </div>
+            </div>
+            <button type="button" onclick="toggleMobileSidebar(false)" aria-label="Fechar menu" class="mobile-sidebar-close">
+                <span class="material-symbols-outlined text-[24px]">close</span>
+            </button>
+        </div>
+
+        <div class="mobile-sidebar-content">
+            <nav class="mobile-nav-list space-y-1.5">
+                <!-- Início -->
+                <button type="button" onclick="navegarMobile('inicio')" class="mobile-nav-item">
+                    <span class="material-symbols-outlined text-primary text-[22px]">home</span>
+                    <div class="flex flex-col text-left">
+                        <span class="font-bold text-sm">Início &amp; Consulta</span>
+                        <span class="text-xs text-on-surface-variant font-normal">Verificar cadastro e acessar formulários</span>
+                    </div>
+                </button>
+
+                <!-- File Tree Accordion: Pré-Cadastro -->
+                <div class="mobile-tree-group rounded-xl border border-outline-variant/30 overflow-hidden bg-surface-container-low/50">
+                    <button type="button" onclick="toggleMobileAccordion('precadastro')" id="btn-mobile-tree-precadastro"
+                        class="mobile-tree-header w-full flex items-center justify-between p-3.5 hover:bg-surface-container font-bold text-sm text-on-surface transition-colors">
+                        <div class="flex items-center gap-2.5">
+                            <span class="material-symbols-outlined text-primary text-[22px]">app_registration</span>
+                            <span>Pré-Cadastro</span>
+                        </div>
+                        <span class="material-symbols-outlined text-[20px] mobile-tree-chevron transition-transform duration-200">expand_more</span>
+                    </button>
+                    <div id="sub-mobile-tree-precadastro" class="mobile-tree-sub pl-4 pr-2 py-2 space-y-1 border-t border-outline-variant/20 bg-surface-container-lowest/80 hidden">
+                        <button type="button" onclick="navegarMobile('atleta')" class="mobile-tree-leaf flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-xs font-semibold text-slate-700 hover:text-primary hover:bg-sky-50 w-full text-left">
+                            <span class="text-slate-400 font-mono text-xs flex-shrink-0">├─</span>
+                            <span class="material-symbols-outlined text-[18px] text-primary">sports_soccer</span>
+                            <div class="flex flex-col">
+                                <span>Pré-Cadastro Atleta</span>
+                                <span class="text-[10px] text-slate-400 font-normal">Inscrição para novos alunos</span>
+                            </div>
+                        </button>
+                        <button type="button" onclick="navegarMobile('instrutor')" class="mobile-tree-leaf flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-xs font-semibold text-slate-700 hover:text-primary hover:bg-sky-50 w-full text-left">
+                            <span class="text-slate-400 font-mono text-xs flex-shrink-0">└─</span>
+                            <span class="material-symbols-outlined text-[18px] text-secondary">sports</span>
+                            <div class="flex flex-col">
+                                <span>Pré-Cadastro Instrutor</span>
+                                <span class="text-[10px] text-slate-400 font-normal">Credenciamento de professores</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- File Tree Accordion: Carteirinha -->
+                <div class="mobile-tree-group rounded-xl border border-outline-variant/30 overflow-hidden bg-surface-container-low/50">
+                    <button type="button" onclick="toggleMobileAccordion('carteirinha')" id="btn-mobile-tree-carteirinha"
+                        class="mobile-tree-header w-full flex items-center justify-between p-3.5 hover:bg-surface-container font-bold text-sm text-on-surface transition-colors">
+                        <div class="flex items-center gap-2.5">
+                            <span class="material-symbols-outlined text-primary text-[22px]">badge</span>
+                            <span>Carteirinha</span>
+                        </div>
+                        <span class="material-symbols-outlined text-[20px] mobile-tree-chevron transition-transform duration-200">expand_more</span>
+                    </button>
+                    <div id="sub-mobile-tree-carteirinha" class="mobile-tree-sub pl-4 pr-2 py-2 space-y-1 border-t border-outline-variant/20 bg-surface-container-lowest/80 hidden">
+                        <button type="button" onclick="navegarMobile('carteirinha')" class="mobile-tree-leaf flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-xs font-semibold text-slate-700 hover:text-primary hover:bg-sky-50 w-full text-left">
+                            <span class="text-slate-400 font-mono text-xs flex-shrink-0">├─</span>
+                            <span class="material-symbols-outlined text-[18px] text-primary">badge</span>
+                            <div class="flex flex-col">
+                                <span>Carteirinha Digital</span>
+                                <span class="text-[10px] text-slate-400 font-normal">Visualizar e baixar em PDF</span>
+                            </div>
+                        </button>
+                        <a href="verificar.html" class="mobile-tree-leaf flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-xs font-semibold text-slate-700 hover:text-emerald-700 hover:bg-emerald-50 w-full text-left">
+                            <span class="text-slate-400 font-mono text-xs flex-shrink-0">└─</span>
+                            <span class="material-symbols-outlined text-[18px] text-emerald-600">verified</span>
+                            <div class="flex flex-col">
+                                <span class="text-emerald-900">Verificar Carteirinha (QR)</span>
+                                <span class="text-[10px] text-emerald-600 font-normal">Autenticidade e validade</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="mobile-sidebar-footer">
+                <button type="button" onclick="toggleWhatsappPopup(true); toggleMobileSidebar(false);" class="mobile-btn-whatsapp">
+                    <span class="material-symbols-outlined text-[20px]">support_agent</span>
+                    <span>Suporte via WhatsApp</span>
+                </button>
+                <a href="http://localhost:3000" target="_blank" rel="noopener noreferrer" class="mobile-btn-restrita">
+                    <span class="material-symbols-outlined text-[20px]">lock</span>
+                    <span>Área Restrita do Sistema</span>
+                </a>
+            </div>
+        </div>
+    </aside>
+
     <!-- ==================== MODAL SELEÇÃO DE TIPO ==================== -->
-    <!--
-        Primeira tela. Usuário escolhe entre Atleta ou Instrutor.
-        O resultado seta ``window.tipoCadastro`` e mostra o form
-        correspondente. Botão "Continuar" fica desabilitado até uma
-        opção ser marcada.
-    -->
     <div class="modal-tipo-overlay" id="modal-selecao-tipo" role="dialog" aria-modal="true"
         aria-labelledby="modal-selecao-tipo-titulo">
         <div class="modal-tipo-card">
-            <h2 class="modal-tipo-titulo" id="modal-selecao-tipo-titulo">Bem-vindo ao pré-cadastro</h2>
-            <p class="modal-tipo-subtitulo">Selecione o tipo de cadastro que você deseja realizar.</p>
+            <div class="flex justify-center mb-3">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-fixed text-primary font-bold text-xs">
+                    <span class="material-symbols-outlined text-[16px]">stars</span>
+                    Temporada Esportiva 2026/2027
+                </span>
+            </div>
+            <h2 class="modal-tipo-titulo" id="modal-selecao-tipo-titulo">Bem-vindo ao Pré-Cadastro</h2>
+            <p class="modal-tipo-subtitulo">Selecione o tipo de cadastro que você deseja realizar no Instituto Nosso Esporte Clube.</p>
             <div class="modal-tipo-grid">
-                <button type="button" class="tipo-card" data-tipo="atleta" aria-pressed="false">
-                    <span class="tipo-card-icon" aria-hidden="true">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"
-                            fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                            stroke-linejoin="round">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                            <circle cx="12" cy="7" r="4" />
-                        </svg>
-                    </span>
-                    <span class="tipo-card-titulo">Atleta</span>
-                    <span class="tipo-card-descricao">Pré-cadastro de aluno ou atleta do INEC / NEC</span>
+                <button type="button" class="tipo-card group" data-tipo="atleta" aria-pressed="false">
+                    <div class="tipo-card-icon w-14 h-14 rounded-full bg-primary-fixed flex items-center justify-center text-primary group-hover:scale-105 transition-transform flex-shrink-0">
+                        <span class="material-symbols-outlined text-[32px]">sports_soccer</span>
+                    </div>
+                    <div class="tipo-card-content flex flex-col items-center">
+                        <span class="tipo-card-titulo">Atleta / Aluno</span>
+                        <span class="tipo-card-descricao">Inscrição de crianças e jovens nas turmas esportivas e culturais gratuitas</span>
+                        <span class="tipo-card-tag mt-2 text-[11px] font-bold text-primary px-2.5 py-0.5 rounded-full bg-surface-container">Pré-Cadastro</span>
+                    </div>
                 </button>
-                <button type="button" class="tipo-card" data-tipo="instrutor" aria-pressed="false">
-                    <span class="tipo-card-icon" aria-hidden="true">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"
-                            fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                            stroke-linejoin="round">
-                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-                        </svg>
-                    </span>
-                    <span class="tipo-card-titulo">Instrutor</span>
-                    <span class="tipo-card-descricao">Pré-cadastro de instrutor / professor / coordenador</span>
+                <button type="button" class="tipo-card group" data-tipo="instrutor" aria-pressed="false">
+                    <div class="tipo-card-icon w-14 h-14 rounded-full bg-secondary-container flex items-center justify-center text-secondary group-hover:scale-105 transition-transform flex-shrink-0">
+                        <span class="material-symbols-outlined text-[32px]">sports</span>
+                    </div>
+                    <div class="tipo-card-content flex flex-col items-center">
+                        <span class="tipo-card-titulo">Instrutor / Professor</span>
+                        <span class="tipo-card-descricao">Cadastro profissional para professores, instrutores e coordenadores esportivos</span>
+                        <span class="tipo-card-tag mt-2 text-[11px] font-bold text-secondary px-2.5 py-0.5 rounded-full bg-secondary-container/40">Pré-Cadastro</span>
+                    </div>
+                </button>
+                <button type="button" class="tipo-card group" data-tipo="carteirinha" aria-pressed="false">
+                    <div class="tipo-card-icon w-14 h-14 rounded-full bg-tertiary-fixed flex items-center justify-center text-tertiary group-hover:scale-105 transition-transform flex-shrink-0">
+                        <span class="material-symbols-outlined text-[32px]">badge</span>
+                    </div>
+                    <div class="tipo-card-content flex flex-col items-center">
+                        <span class="tipo-card-titulo">Carteirinha Digital</span>
+                        <span class="tipo-card-descricao">Emissão e personalização da credencial oficial com foto e QR Code para atletas</span>
+                        <span class="tipo-card-tag mt-2 text-[11px] font-bold text-tertiary px-2.5 py-0.5 rounded-full bg-tertiary-fixed/40">Emissão Oficial</span>
+                    </div>
                 </button>
             </div>
             <div class="modal-tipo-actions">
-                <button type="button" class="btn btn-primary" id="btn-continuar-tipo" disabled>
-                    Continuar
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2">
-                        <line x1="5" y1="12" x2="19" y2="12" />
-                        <polyline points="12 5 19 12 12 19" />
-                    </svg>
+                <button type="button" class="btn btn-primary w-full sm:w-auto px-8 py-3 text-base shadow-md" id="btn-continuar-tipo" disabled>
+                    <span>Continuar</span>
+                    <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- ==================== HEADER ==================== -->
-    <header class="header">
-        <div class="header-inner">
-            <div class="header-logos">
-                <img src="img/LogoINEC.png" alt="INEC Logo" class="header-logo">
-                <img src="img/logoNEC.png" alt="NEC Logo" class="header-logo">
-            </div>
-            <div class="header-text">
-                <h1>Pré-cadastro</h1>
-                <p class="header-subtitle">Preencha os dados abaixo para solicitar o cadastro. Após o envio, as
-                    informações passarão por análise antes da aprovação final.</p>
-            </div>
-        </div>
-    </header>
+    <!-- ==================== MAIN CONTENT AREA ==================== -->
+    <main class="w-full pt-20 bg-surface min-h-screen">
 
-    <!-- ==================== MAIN FORM ==================== -->
-    <main class="main-container">
-
-        <!-- ===== Consulta inicial (passo 1) =====
-             Antes de abrir o formulário grande, pedimos o CPF do atleta
-             e o CPF do responsável. A Edge Function ``validar-atleta``
-             (action: ``consultar``) usa ambos para:
-               - retornar ``encontrado: false`` (atleta novo);
-               - retornar dados do atleta (caso já cadastrado);
-               - classificar a ficha como ``completo`` ou ``incompleto``;
-               - sinalizar se já existe solicitação de atualização em
-                 análise (``pendencias: [{status: 'pendente', ...}]``).
-             O resultado abre um modal com 4 estados possíveis (ver
-             ``#modal-consulta`` no final do HTML). -->
-        <section class="form-card" id="consulta-card">
-            <div class="card-header">
-                <span class="card-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    </svg>
-                </span>
-                <h2 class="card-title">Consulta de Cadastro</h2>
-            </div>
-            <p class="consulta-instrucao">
-                Antes de preencher o formulário, informe o <strong>CPF do atleta</strong>
-                e o <strong>CPF do responsável</strong>. Vamos verificar se o atleta
-                já está cadastrado, se a ficha está completa, ou se há uma solicitação
-                de atualização em análise.
-            </p>
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="inp-consulta-cpf-atleta">CPF do Atleta <span class="required">*</span></label>
-                    <input type="text" id="inp-consulta-cpf-atleta" placeholder="000.000.000-00" maxlength="14">
-                    <span class="error-msg" id="err-consulta-cpf-atleta"></span>
+        <!-- ==================== STEP 1: CONSULTA CARD (BENTO GRID HERO) ==================== -->
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" id="consulta-card">
+            <!-- Breadcrumbs & Status Strip -->
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+                <div class="flex items-center gap-1.5 text-on-surface-variant text-xs sm:text-sm">
+                    <span class="text-primary font-bold">INEC</span>
+                    <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+                    <span>Inscrições Comunitárias</span>
+                    <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+                    <span class="text-on-surface font-semibold">Consulta e Pré-Cadastro</span>
                 </div>
-                <div class="form-group">
-                    <label for="inp-consulta-cpf-resp">CPF do Responsável <span class="required">*</span></label>
-                    <input type="text" id="inp-consulta-cpf-resp" placeholder="000.000.000-00" maxlength="14">
-                    <span class="error-msg" id="err-consulta-cpf-resp"></span>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container text-primary text-xs font-semibold">
+                    <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                    <span>Sistema de Matrícula Online Operacional</span>
                 </div>
             </div>
-            <div class="form-actions" style="justify-content: flex-end;">
-                <button type="button" class="btn btn-primary" id="btn-verificar" onclick="verificarCadastro()">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    </svg>
-                    Verificar cadastro
-                </button>
-            </div>
-        </section>
 
-        <form id="form-precadastro" onsubmit="return false;" novalidate style="display:none;">
+            <!-- Bento Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+                <!-- Left Column: Hero Banner (7 cols) -->
+                <div class="lg:col-span-7 flex flex-col justify-between rounded-2xl bg-gradient-to-br from-primary via-primary-container to-tertiary text-on-primary p-6 sm:p-8 lg:p-10 relative overflow-hidden shadow-xl">
+                    <!-- Geometric Accents -->
+                    <div class="absolute -right-16 -top-16 w-64 h-64 border-[32px] border-white/5 rounded-full pointer-events-none"></div>
+                    <div class="absolute right-12 bottom-12 w-48 h-48 bg-white/5 rounded-full blur-xl pointer-events-none"></div>
 
-            <!-- ===== Foto ===== -->
-            <section class="form-card">
-                <div class="card-header">
-                    <span class="card-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z">
-                            </path>
-                            <circle cx="12" cy="13" r="4"></circle>
-                        </svg>
-                    </span>
-                    <h2 class="card-title">Foto do Atleta <span class="required">*</span></h2>
-                </div>
-                <div class="photo-upload-area">
-                    <div class="photo-preview" id="photo-preview">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z">
-                            </path>
-                            <circle cx="12" cy="13" r="4"></circle>
-                        </svg>
-                        <span class="photo-placeholder-text">Clique para selecionar</span>
-                    </div>
-                    <input type="file" id="inp-foto" accept="image/*" class="file-input-hidden"
-                        onchange="handlePhotoSelect(this)">
-                    <button type="button" class="btn btn-outline-sm"
-                        onclick="document.getElementById('inp-foto').click()">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                            <polyline points="17 8 12 3 7 8" />
-                            <line x1="12" y1="3" x2="12" y2="15" />
-                        </svg>
-                        Escolher Foto
-                    </button>
-                    <span class="file-hint">JPG ou PNG, máx. 5MB</span>
-                    <span class="file-name" id="foto-file-name"></span>
-                    <span class="error-msg" id="err-foto"></span>
-                </div>
-            </section>
-
-            <!-- ===== Dados do Atleta ===== -->
-            <section class="form-card">
-                <div class="card-header">
-                    <span class="card-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                            <circle cx="12" cy="7" r="4" />
-                        </svg>
-                    </span>
-                    <h2 class="card-title">Dados do Atleta</h2>
-                </div>
-                <div class="form-grid">
-                    <div class="form-group full-width">
-                        <label for="inp-nome">Nome Completo <span class="required">*</span></label>
-                        <input type="text" id="inp-nome" placeholder="Digite o nome completo do atleta" required>
-                        <span class="error-msg" id="err-nome"></span>
-                    </div>
-                    <div class="form-group">
-                        <label for="inp-data-nasc">Data de Nascimento <span class="required">*</span></label>
-                        <input type="text" id="inp-data-nasc" placeholder="dd/mm/aaaa" maxlength="10" required>
-                        <span class="error-msg" id="err-data-nasc"></span>
-                    </div>
-                    <div class="form-group">
-                        <label for="inp-cpf-atleta">CPF do Atleta <span class="required">*</span></label>
-                        <input type="text" id="inp-cpf-atleta" placeholder="000.000.000-00" maxlength="14" required>
-                        <span class="error-msg" id="err-cpf-atleta"></span>
-                    </div>
-                    <div class="form-group">
-                        <label for="inp-rg-atleta">RG do Atleta <span class="optional">(Opcional)</span></label>
-                        <input type="text" id="inp-rg-atleta" placeholder="00.000.000-0">
-                    </div>
-                </div>
-            </section>
-
-            <!-- ===== Dados do Responsável ===== -->
-            <section class="form-card">
-                <div class="card-header">
-                    <span class="card-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                            <circle cx="9" cy="7" r="4" />
-                            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                        </svg>
-                    </span>
-                    <h2 class="card-title">Dados do Responsável</h2>
-                </div>
-                <div class="form-grid">
-                    <div class="form-group full-width">
-                        <label for="inp-nome-resp">Nome do Responsável <span class="required">*</span></label>
-                        <input type="text" id="inp-nome-resp" placeholder="Digite o nome completo do responsável"
-                            required>
-                        <span class="error-msg" id="err-nome-resp"></span>
-                    </div>
-                    <div class="form-group">
-                        <label for="inp-parentesco">Parentesco com Atleta <span class="required">*</span></label>
-                        <input type="text" id="inp-parentesco" placeholder="Ex: Pai, Mãe, Tutor" required>
-                        <span class="error-msg" id="err-parentesco"></span>
-                    </div>
-                    <div class="form-group">
-                        <label for="inp-cpf-resp">CPF do Responsável <span class="required">*</span></label>
-                        <input type="text" id="inp-cpf-resp" placeholder="000.000.000-00" maxlength="14" required>
-                        <span class="error-msg" id="err-cpf-resp"></span>
-                    </div>
-                    <div class="form-group">
-                        <label for="inp-email">E-mail <span class="required">*</span></label>
-                        <input type="email" id="inp-email" placeholder="email@exemplo.com" required>
-                        <span class="error-msg" id="err-email"></span>
-                    </div>
-                    <div class="form-group">
-                        <label for="inp-telefone">Telefone / WhatsApp <span class="required">*</span></label>
-                        <input type="text" id="inp-telefone" placeholder="(00) 00000-0000" maxlength="15" required>
-                        <span class="error-msg" id="err-telefone"></span>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ===== Endereço ===== -->
-            <section class="form-card">
-                <div class="card-header">
-                    <span class="card-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                            <circle cx="12" cy="10" r="3" />
-                        </svg>
-                    </span>
-                    <h2 class="card-title">Endereço</h2>
-                </div>
-                <div class="form-grid">
-                    <div class="form-group full-width">
-                        <label for="inp-rua">Rua / Avenida <span class="required">*</span></label>
-                        <input type="text" id="inp-rua" placeholder="Digite o nome da rua ou avenida" required>
-                        <span class="error-msg" id="err-rua"></span>
-                    </div>
-                    <div class="form-group">
-                        <label for="inp-numero">Número <span class="required">*</span></label>
-                        <input type="text" id="inp-numero" placeholder="Nº" required>
-                        <span class="error-msg" id="err-numero"></span>
-                    </div>
-                    <div class="form-group">
-                        <label for="inp-bairro">Bairro <span class="required">*</span></label>
-                        <input type="text" id="inp-bairro" placeholder="Digite o bairro" required>
-                        <span class="error-msg" id="err-bairro"></span>
-                    </div>
-                    <div class="form-group">
-                        <label for="inp-cidade">Cidade <span class="required">*</span></label>
-                        <input type="text" id="inp-cidade" placeholder="Digite a cidade" required>
-                        <span class="error-msg" id="err-cidade"></span>
-                    </div>
-                    <div class="form-group">
-                        <label for="inp-cep">CEP <span class="required">*</span></label>
-                        <input type="text" id="inp-cep" placeholder="00000-000" maxlength="9" required>
-                        <span class="error-msg" id="err-cep"></span>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ===== Período e Modalidades ===== -->
-            <section class="form-card">
-                <div class="card-header">
-                    <span class="card-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10" />
-                            <polyline points="12 6 12 12 16 14" />
-                        </svg>
-                    </span>
-                    <h2 class="card-title">Período e Modalidades</h2>
-                </div>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="inp-periodo">Período <span class="required">*</span></label>
-                        <select id="inp-periodo" required>
-                            <option value="">Selecione...</option>
-                            <option value="Manhã">Manhã</option>
-                            <option value="Tarde">Tarde</option>
-                            <option value="Noite">Noite</option>
-                        </select>
-                        <span class="error-msg" id="err-periodo"></span>
-                    </div>
-                </div>
-                <div class="modalidades-section">
-                    <div class="modalidades-block">
-                        <h3 class="modalidades-title">INEC</h3>
-                        <div class="checkbox-grid" id="mod-inec"></div>
-                    </div>
-                    <div class="modalidades-block">
-                        <h3 class="modalidades-title">NEC</h3>
-                        <div class="checkbox-grid" id="mod-nec"></div>
-                    </div>
-                </div>
-                <span class="error-msg" id="err-modalidades"></span>
-            </section>
-
-            <!-- ===== Informações de Saúde ===== -->
-            <section class="form-card">
-                <div class="card-header">
-                    <span class="card-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-                        </svg>
-                    </span>
-                    <h2 class="card-title">Informações de Saúde</h2>
-                </div>
-                <div class="toggle-container">
-                    <span class="toggle-question">O atleta possui algum problema de saúde?</span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="inp-tem-saude" onchange="toggleSaude()">
-                        <span class="toggle-slider"></span>
-                    </label>
-                    <span class="toggle-label-text" id="toggle-saude-text">Não</span>
-                </div>
-                <div class="saude-details" id="saude-details" style="display:none;">
-                    <div class="form-group full-width">
-                        <label for="inp-info-saude">Descreva a condição de saúde, alergia ou necessidade</label>
-                        <textarea id="inp-info-saude" placeholder="Ex: Alergia a dipirona, rinite alérgica..."
-                            rows="3"></textarea>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ===== Documentos ===== -->
-            <section class="form-card">
-                <div class="card-header">
-                    <span class="card-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                            <polyline points="14 2 14 8 20 8" />
-                            <line x1="16" y1="13" x2="8" y2="13" />
-                            <line x1="16" y1="17" x2="8" y2="17" />
-                            <polyline points="10 9 9 9 8 9" />
-                        </svg>
-                    </span>
-                    <h2 class="card-title">Documentos</h2>
-                </div>
-                <div class="documents-grid">
-                    <div class="doc-upload-card" id="doc-aluno-card">
-                        <div class="doc-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="1.5">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                <polyline points="14 2 14 8 20 8" />
-                            </svg>
+                    <div class="relative z-10 space-y-6">
+                        <!-- Badges -->
+                        <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container text-xs font-bold shadow-sm">
+                                <span class="material-symbols-outlined text-[16px]">stars</span>
+                                Temporada Esportiva 2026/2027
+                            </span>
+                            <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-on-primary text-xs font-medium">
+                                <span class="material-symbols-outlined text-[15px]">verified</span>
+                                Gratuito • Fomento à Cidadania
+                            </span>
                         </div>
-                        <span class="doc-label">Documento do Atleta</span>
-                        <span class="doc-status" id="doc-aluno-status">Nenhum arquivo selecionado</span>
-                        <input type="file" id="inp-doc-aluno" accept="image/*,.pdf" class="file-input-hidden"
-                            onchange="handleDocSelect(this, 'aluno')">
-                        <button type="button" class="btn btn-outline-sm"
-                            onclick="document.getElementById('inp-doc-aluno').click()">Selecionar</button>
-                    </div>
-                    <div class="doc-upload-card" id="doc-resp-card">
-                        <div class="doc-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="1.5">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                <polyline points="14 2 14 8 20 8" />
-                            </svg>
-                        </div>
-                        <span class="doc-label">Documento do Responsável</span>
-                        <span class="doc-status" id="doc-resp-status">Nenhum arquivo selecionado</span>
-                        <input type="file" id="inp-doc-resp" accept="image/*,.pdf" class="file-input-hidden"
-                            onchange="handleDocSelect(this, 'resp')">
-                        <button type="button" class="btn btn-outline-sm"
-                            onclick="document.getElementById('inp-doc-resp').click()">Selecionar</button>
-                    </div>
-                </div>
-            </section>
 
-            <!-- ===== Termos e Consentimento ===== -->
-            <section class="form-card">
-                <div class="card-header">
-                    <span class="card-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                        </svg>
-                    </span>
-                    <h2 class="card-title">Termos e Consentimento</h2>
+                        <!-- Titles -->
+                        <div class="space-y-2">
+                            <span class="text-xs font-bold text-tertiary-fixed uppercase tracking-wider block">Rede Socioesportiva Integrada</span>
+                            <h1 class="font-headline text-3xl sm:text-4xl lg:text-5xl text-on-primary font-bold tracking-tight leading-tight">
+                                Portal de Pré-Cadastro &amp; Matrícula
+                            </h1>
+                            <p class="text-on-primary/90 text-sm sm:text-base max-w-xl pt-1">
+                                Consulte a situação da sua inscrição, conclua fichas pendentes ou garanta a vaga do atleta nos núcleos esportivos oficiais do INEC e NEC.
+                            </p>
+                        </div>
+
+                        <!-- Modalidades Chips -->
+                        <div class="space-y-2">
+                            <span class="text-xs font-bold text-tertiary-fixed uppercase tracking-wider block">Modalidades Abertas:</span>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-md text-xs font-semibold text-on-primary">
+                                    <span class="material-symbols-outlined text-[16px] text-secondary-fixed">sports_soccer</span> Futebol
+                                </span>
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-md text-xs font-semibold text-on-primary">
+                                    <span class="material-symbols-outlined text-[16px] text-secondary-fixed">sports_soccer</span> Futsal
+                                </span>
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-md text-xs font-semibold text-on-primary">
+                                    <span class="material-symbols-outlined text-[16px] text-secondary-fixed">sports_basketball</span> Basquete
+                                </span>
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-md text-xs font-semibold text-on-primary">
+                                    <span class="material-symbols-outlined text-[16px] text-secondary-fixed">sports_volleyball</span> Vôlei
+                                </span>
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-md text-xs font-semibold text-on-primary">
+                                    <span class="material-symbols-outlined text-[16px] text-secondary-fixed">sports_martial_arts</span> Judô
+                                </span>
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-md text-xs font-semibold text-on-primary">
+                                    <span class="material-symbols-outlined text-[16px] text-secondary-fixed">sports_martial_arts</span> Jiu-Jitsu
+                                </span>
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-md text-xs font-semibold text-on-primary">
+                                    <span class="material-symbols-outlined text-[16px] text-secondary-fixed">sports_handball</span> Handball
+                                </span>
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-md text-xs font-semibold text-on-primary">
+                                    <span class="material-symbols-outlined text-[16px] text-secondary-fixed">sports_tennis</span> Tênis de Mesa
+                                </span>
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-md text-xs font-semibold text-on-primary">
+                                    <span class="material-symbols-outlined text-[16px] text-secondary-fixed">accessibility_new</span> Balé &amp; Dança
+                                </span>
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-md text-xs font-semibold text-on-primary">
+                                    <span class="material-symbols-outlined text-[16px] text-secondary-fixed">emoji_events</span> X1
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Integrated Photo Asset (Apenas a foto em alta qualidade, sem sobreposição de texto) -->
+                        <div class="relative rounded-2xl overflow-hidden shadow-xl border border-white/15 group mt-4 bg-slate-900/40">
+                            <img alt="Atletas de Futebol do Instituto Nosso Esporte Clube"
+                                class="w-full h-64 sm:h-80 object-cover object-center transform group-hover:scale-[1.03] transition-transform duration-500"
+                                src="img/imagem_futebol.jpg">
+                        </div>
+                    </div>
+
+                    <!-- Notice Footer inside Left Card -->
+                    <div class="relative z-10 pt-4 mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/10 backdrop-blur-md rounded-xl p-4">
+                        <div class="flex items-start gap-2">
+                            <span class="material-symbols-outlined text-secondary-fixed text-[20px] flex-shrink-0 mt-0.5">info</span>
+                            <p class="text-xs sm:text-sm text-on-primary/90 leading-snug">
+                                <strong class="font-semibold text-white">Importante:</strong> Vagas preferenciais destinadas a estudantes matriculados regularmente na rede pública.
+                            </p>
+                        </div>
+                        <button type="button" onclick="confirmarSelecaoTipo('instrutor')" class="inline-flex items-center gap-1 text-tertiary-fixed hover:text-white text-xs font-bold whitespace-nowrap transition-colors">
+                            <span>Sou Instrutor</span>
+                            <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                        </button>
+                    </div>
                 </div>
-                <div class="terms-content">
-                    <div class="terms-text">
-                        <p>Ao enviar este formulário, declaro que:</p>
-                        <ul>
-                            <li>Os dados informados são verdadeiros e de minha responsabilidade;</li>
-                            <li>Autorizo o envio e armazenamento seguro das informações e documentos fornecidos;</li>
-                            <li>Entendo que o cadastro passará por <strong>análise e validação</strong> pela equipe
-                                responsável antes da aprovação final;</li>
-                            <li>Estou ciente de que poderei ser contatado para confirmação ou complementação dos dados.
+
+                <!-- Right Column: Verification Form & Checklist (5 cols) -->
+                <div class="lg:col-span-5 flex flex-col gap-6">
+                    <!-- Verification Card -->
+                    <div class="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-100 flex flex-col gap-6">
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold uppercase tracking-wider text-primary">Área de Checagem</span>
+                                <span class="inline-flex items-center gap-1 text-xs px-2.5 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-medium">
+                                    <span class="material-symbols-outlined text-[14px] text-tertiary">lock</span> Acesso Seguro
+                                </span>
+                            </div>
+                            <h2 class="font-headline font-bold text-2xl text-on-surface mt-1">
+                                Consulta de Cadastro
+                            </h2>
+                            <p class="text-xs sm:text-sm text-on-surface-variant mt-1">
+                                Informe o CPF do atleta e do responsável para verificar se já existe matrícula ativa, pendência de documentos ou iniciar um novo pré-cadastro.
+                            </p>
+                        </div>
+
+                        <!-- Form -->
+                        <div class="space-y-4">
+                            <!-- Input: CPF do Atleta -->
+                            <div class="space-y-1.5">
+                                <label class="block text-xs uppercase tracking-wider text-on-surface-variant font-semibold" for="inp-consulta-cpf-atleta">
+                                    CPF do Atleta (Beneficiário) <span class="text-secondary font-bold">*</span>
+                                </label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-outline">
+                                        <span class="material-symbols-outlined text-[20px]">badge</span>
+                                    </span>
+                                    <input type="text" id="inp-consulta-cpf-atleta" placeholder="000.000.000-00" maxlength="14"
+                                        class="w-full h-12 pl-11 pr-4 rounded-xl bg-surface-container-low text-on-surface text-sm placeholder:text-outline/70 border border-outline-variant/60 focus:outline-none focus:border-primary focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 transition-all">
+                                </div>
+                                <span class="error-msg" id="err-consulta-cpf-atleta"></span>
+                            </div>
+
+                            <!-- Input: CPF do Responsável -->
+                            <div class="space-y-1.5">
+                                <div class="flex items-center justify-between">
+                                    <label class="block text-xs uppercase tracking-wider text-on-surface-variant font-semibold" for="inp-consulta-cpf-resp">
+                                        CPF do Responsável Legal <span class="text-secondary font-bold">*</span>
+                                    </label>
+                                    <span class="text-[11px] text-on-surface-variant font-medium">Obrigatório p/ menores</span>
+                                </div>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-outline">
+                                        <span class="material-symbols-outlined text-[20px]">family_restroom</span>
+                                    </span>
+                                    <input type="text" id="inp-consulta-cpf-resp" placeholder="000.000.000-00" maxlength="14"
+                                        class="w-full h-12 pl-11 pr-4 rounded-xl bg-surface-container-low text-on-surface text-sm placeholder:text-outline/70 border border-outline-variant/60 focus:outline-none focus:border-primary focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 transition-all">
+                                </div>
+                                <span class="error-msg" id="err-consulta-cpf-resp"></span>
+                            </div>
+
+                            <!-- Action Button -->
+                            <div class="pt-2">
+                                <button type="button" class="btn btn-primary w-full h-12 rounded-xl text-sm sm:text-base font-semibold shadow-md" id="btn-verificar" onclick="verificarCadastro()">
+                                    <span class="material-symbols-outlined text-[20px]">search_check</span>
+                                    <span>Verificar Cadastro</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Checklist Card -->
+                    <div class="bg-surface-container-low rounded-2xl p-6 space-y-4 border border-outline-variant/40">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-tertiary text-[22px]">fact_check</span>
+                                <h3 class="font-headline font-bold text-base text-on-surface">Documentos Necessários</h3>
+                            </div>
+                            <span class="text-xs text-primary font-semibold">Etapa de Validação</span>
+                        </div>
+                        <p class="text-xs text-on-surface-variant">
+                            Mantenha em mãos para anexar no formulário ou apresentar no primeiro treino presencial:
+                        </p>
+                        <ul class="space-y-2.5">
+                            <li class="flex items-center gap-3 p-2.5 rounded-xl bg-surface-container-lowest border border-outline-variant/30">
+                                <div class="w-8 h-8 rounded-lg bg-primary-fixed flex items-center justify-center text-primary flex-shrink-0">
+                                    <span class="material-symbols-outlined text-[18px]">badge</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center justify-between">
+                                        <h4 class="text-xs font-semibold text-on-surface">RG ou Certidão de Nascimento</h4>
+                                        <span class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant text-[10px] font-bold">Obrigatório</span>
+                                    </div>
+                                    <p class="text-[11px] text-on-surface-variant truncate">Cópia do aluno e responsável com foto legível</p>
+                                </div>
+                            </li>
+                            <li class="flex items-center gap-3 p-2.5 rounded-xl bg-surface-container-lowest border border-outline-variant/30">
+                                <div class="w-8 h-8 rounded-lg bg-primary-fixed flex items-center justify-center text-primary flex-shrink-0">
+                                    <span class="material-symbols-outlined text-[18px]">home_pin</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center justify-between">
+                                        <h4 class="text-xs font-semibold text-on-surface">Comprovante de Residência</h4>
+                                        <span class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant text-[10px] font-bold">Recente</span>
+                                    </div>
+                                    <p class="text-[11px] text-on-surface-variant truncate">Conta recente emitida nos últimos 90 dias</p>
+                                </div>
                             </li>
                         </ul>
                     </div>
-                    <label class="terms-checkbox">
-                        <input type="checkbox" id="inp-aceite" required>
-                        <span class="checkmark"></span>
-                        <span>Li e concordo com os termos acima <span class="required">*</span></span>
-                    </label>
-                    <span class="error-msg" id="err-aceite"></span>
-                </div>
-            </section>
 
-            <!-- ===== Ações ===== -->
-            <div class="form-actions">
-                <button type="button" class="btn btn-secondary" onclick="limparFormulario()">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2">
-                        <polyline points="1 4 1 10 7 10" />
-                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
-                    </svg>
-                    Limpar
-                </button>
-                <button type="button" class="btn btn-primary" id="btn-enviar" onclick="enviarPreCadastro()">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2">
-                        <line x1="22" y1="2" x2="11" y2="13" />
-                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                    </svg>
-                    Enviar Pré-cadastro
-                </button>
-            </div>
-        </form>
-
-        <!-- ==================== FORM INSTRUTOR ==================== -->
-        <!--
-            Formulário separado do atleta. Sem consulta prévia (não há
-            "responsável"). Cards: Foto, Dados, Contato, Endereço,
-            Documento, Termos. O pool de validações, máscaras e
-            helpers de upload é compartilhado com o fluxo atleta em
-            ``app.js``.
-        -->
-        <form id="form-instrutor" onsubmit="return false;" novalidate style="display:none;">
-
-            <!-- ===== Foto ===== -->
-            <section class="form-card">
-                <div class="card-header">
-                    <span class="card-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z">
-                            </path>
-                            <circle cx="12" cy="13" r="4"></circle>
-                        </svg>
-                    </span>
-                    <h2 class="card-title">Foto do Instrutor <span class="required">*</span></h2>
-                </div>
-                <div class="photo-upload-area">
-                    <div class="photo-preview" id="photo-preview-instr">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z">
-                            </path>
-                            <circle cx="12" cy="13" r="4"></circle>
-                        </svg>
-                        <span class="photo-placeholder-text">Clique para selecionar</span>
-                    </div>
-                    <input type="file" id="inp-foto-instr" accept="image/*" class="file-input-hidden"
-                        onchange="handlePhotoSelectInstr(this)">
-                    <button type="button" class="btn btn-outline-sm"
-                        onclick="document.getElementById('inp-foto-instr').click()">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                            <polyline points="17 8 12 3 7 8" />
-                            <line x1="12" y1="3" x2="12" y2="15" />
-                        </svg>
-                        Escolher Foto
-                    </button>
-                    <span class="file-hint">JPG ou PNG, máx. 5MB</span>
-                    <span class="file-name" id="foto-file-name-instr"></span>
-                    <span class="error-msg" id="err-foto-instr"></span>
-                </div>
-            </section>
-
-            <!-- ===== Dados do Instrutor ===== -->
-            <section class="form-card">
-                <div class="card-header">
-                    <span class="card-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-                        </svg>
-                    </span>
-                    <h2 class="card-title">Dados do Instrutor</h2>
-                </div>
-                <div class="form-grid">
-                    <div class="form-group full-width">
-                        <label for="inp-nome-instr">Nome Completo <span class="required">*</span></label>
-                        <input type="text" id="inp-nome-instr" placeholder="Digite o nome completo" required>
-                        <span class="error-msg" id="err-nome-instr"></span>
-                    </div>
-                    <div class="form-group">
-                        <label for="inp-cpf-instr">CPF <span class="required">*</span></label>
-                        <input type="text" id="inp-cpf-instr" placeholder="000.000.000-00" maxlength="14" required>
-                        <span class="error-msg" id="err-cpf-instr"></span>
-                    </div>
-                    <div class="form-group">
-                        <label for="inp-rg-instr">RG <span class="optional">(Opcional)</span></label>
-                        <input type="text" id="inp-rg-instr" placeholder="00.000.000-0">
-                    </div>
-                    <div class="form-group">
-                        <label for="inp-data-nasc-instr">Data de Nascimento <span class="required">*</span></label>
-                        <input type="text" id="inp-data-nasc-instr" placeholder="dd/mm/aaaa" maxlength="10" required>
-                        <span class="error-msg" id="err-data-nasc-instr"></span>
-                    </div>
-                    <div class="form-group">
-                        <label for="inp-funcao">Função / Cargo <span class="required">*</span></label>
-                        <input type="text" id="inp-funcao" placeholder="Ex: Professor de Futebol, Coordenador"
-                            maxlength="80" required>
-                        <span class="error-msg" id="err-funcao"></span>
-                    </div>
-                    <div class="form-group">
-                        <label for="inp-periodo-instr">Período <span class="required">*</span></label>
-                        <select id="inp-periodo-instr" required>
-                            <option value="">Selecione...</option>
-                            <option value="Manhã">Manhã</option>
-                            <option value="Tarde">Tarde</option>
-                            <option value="Noite">Noite</option>
-                        </select>
-                        <span class="error-msg" id="err-periodo-instr"></span>
-                    </div>
-                    <div class="form-group">
-                        <label for="inp-nucleo-instr">Núcleo <span class="required">*</span></label>
-                        <select id="inp-nucleo-instr" required>
-                            <option value="">Selecione...</option>
-                            <option value="NEC">NEC</option>
-                            <option value="INEC">INEC</option>
-                            <option value="AMBOS">Ambos</option>
-                        </select>
-                        <span class="error-msg" id="err-nucleo-instr"></span>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ===== Contato ===== -->
-            <section class="form-card">
-                <div class="card-header">
-                    <span class="card-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                        </svg>
-                    </span>
-                    <h2 class="card-title">Contato</h2>
-                </div>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="inp-email-instr">E-mail <span class="required">*</span></label>
-                        <input type="email" id="inp-email-instr" placeholder="email@exemplo.com" required>
-                        <span class="error-msg" id="err-email-instr"></span>
-                    </div>
-                    <div class="form-group">
-                        <label for="inp-telefone-instr">Telefone / WhatsApp <span class="required">*</span></label>
-                        <input type="text" id="inp-telefone-instr" placeholder="(00) 00000-0000" maxlength="15"
-                            required>
-                        <span class="error-msg" id="err-telefone-instr"></span>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ===== Endereço ===== -->
-            <section class="form-card">
-                <div class="card-header">
-                    <span class="card-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                            <circle cx="12" cy="10" r="3" />
-                        </svg>
-                    </span>
-                    <h2 class="card-title">Endereço</h2>
-                </div>
-                <div class="form-grid">
-                    <div class="form-group full-width">
-                        <label for="inp-rua-instr">Rua / Avenida <span class="required">*</span></label>
-                        <input type="text" id="inp-rua-instr" placeholder="Digite o nome da rua ou avenida" required>
-                        <span class="error-msg" id="err-rua-instr"></span>
-                    </div>
-                    <div class="form-group">
-                        <label for="inp-numero-instr">Número <span class="required">*</span></label>
-                        <input type="text" id="inp-numero-instr" placeholder="Nº" required>
-                        <span class="error-msg" id="err-numero-instr"></span>
-                    </div>
-                    <div class="form-group">
-                        <label for="inp-bairro-instr">Bairro <span class="required">*</span></label>
-                        <input type="text" id="inp-bairro-instr" placeholder="Digite o bairro" required>
-                        <span class="error-msg" id="err-bairro-instr"></span>
-                    </div>
-                    <div class="form-group">
-                        <label for="inp-cidade-instr">Cidade <span class="required">*</span></label>
-                        <input type="text" id="inp-cidade-instr" placeholder="Digite a cidade" required>
-                        <span class="error-msg" id="err-cidade-instr"></span>
-                    </div>
-                    <div class="form-group">
-                        <label for="inp-cep-instr">CEP <span class="required">*</span></label>
-                        <input type="text" id="inp-cep-instr" placeholder="00000-000" maxlength="9" required>
-                        <span class="error-msg" id="err-cep-instr"></span>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ===== Documento do Instrutor ===== -->
-            <section class="form-card">
-                <div class="card-header">
-                    <span class="card-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                            <polyline points="14 2 14 8 20 8" />
-                        </svg>
-                    </span>
-                    <h2 class="card-title">Documento</h2>
-                </div>
-                <div class="documents-grid">
-                    <div class="doc-upload-card" id="doc-instr-card">
-                        <div class="doc-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="1.5">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                <polyline points="14 2 14 8 20 8" />
-                            </svg>
+                    <!-- Direct Support Banner -->
+                    <div class="bg-primary-fixed/40 rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-4 border border-primary-fixed">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary flex-shrink-0">
+                                <span class="material-symbols-outlined text-[20px]">support_agent</span>
+                            </div>
+                            <div>
+                                <p class="text-xs sm:text-sm font-bold text-on-surface">Dúvidas sobre o cadastro?</p>
+                                <p class="text-xs text-on-surface-variant">Suporte direto com a equipe INEC</p>
+                            </div>
                         </div>
-                        <span class="doc-label">RG ou CNH do Instrutor</span>
-                        <span class="doc-status" id="doc-instr-status">Nenhum arquivo selecionado</span>
-                        <input type="file" id="inp-doc-instr" accept="image/*,.pdf" class="file-input-hidden"
-                            onchange="handleDocSelectInstr(this)">
-                        <button type="button" class="btn btn-outline-sm"
-                            onclick="document.getElementById('inp-doc-instr').click()">Selecionar</button>
+                        <button type="button" onclick="toggleWhatsappPopup(true)"
+                            class="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl bg-surface-container-lowest hover:bg-surface text-primary font-bold text-xs sm:text-sm transition-all shadow-sm flex-shrink-0">
+                            <span class="material-symbols-outlined text-[18px] text-tertiary">chat</span>
+                            <span>WhatsApp</span>
+                        </button>
                     </div>
                 </div>
-            </section>
+            </div>
 
-            <!-- ===== Termos e Consentimento ===== -->
-            <section class="form-card">
-                <div class="card-header">
-                    <span class="card-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                        </svg>
-                    </span>
-                    <h2 class="card-title">Termos e Consentimento</h2>
+        </section>
+
+        <!-- ==================== SEÇÃO CARTEIRINHA DIGITAL ==================== -->
+        <section id="secao-carteirinha" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style="display:none;">
+            <!-- Breadcrumbs & Status Strip -->
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+                <div class="flex items-center gap-1.5 text-on-surface-variant text-xs sm:text-sm">
+                    <span class="text-primary font-bold cursor-pointer" onclick="resetarParaSelecaoTipo()">INEC</span>
+                    <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+                    <span class="text-on-surface font-semibold">Carteirinha Digital do Atleta</span>
                 </div>
-                <div class="terms-content">
-                    <div class="terms-text">
-                        <p>Ao enviar este formulário, declaro que:</p>
-                        <ul>
-                            <li>Os dados informados são verdadeiros e de minha responsabilidade;</li>
-                            <li>Autorizo o envio e armazenamento seguro das informações e documentos fornecidos;</li>
-                            <li>Entendo que o cadastro passará por <strong>análise e validação</strong> pela equipe
-                                responsável antes da aprovação final;</li>
-                            <li>Estou ciente de que poderei ser contatado para confirmação ou complementação dos
-                                dados.</li>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container text-primary text-xs font-semibold">
+                    <span class="material-symbols-outlined text-[16px] text-secondary">verified</span>
+                    <span>Credencial Oficial INEC / NEC</span>
+                </div>
+            </div>
+
+            <!-- Bento Grid Hero & Search -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch mb-8">
+                <!-- Left: Search Box (7 cols) -->
+                <div class="lg:col-span-7 bg-surface-container-lowest rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-100 flex flex-col justify-between space-y-6">
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-2">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-fixed text-primary text-xs font-bold">
+                                <span class="material-symbols-outlined text-[16px]">badge</span>
+                                Emissão Imediata
+                            </span>
+                            <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-surface-container text-on-surface-variant text-xs font-medium">
+                                Formato CR80 Oficial
+                            </span>
+                        </div>
+                        <h1 class="font-headline text-2xl sm:text-3xl font-bold text-on-surface tracking-tight">
+                            Carteirinha Digital do Atleta
+                        </h1>
+                        <p class="text-xs sm:text-sm text-on-surface-variant leading-relaxed">
+                            Informe o CPF do atleta cadastrado para consultar o registro, personalizar quais dados devem constar no cartão e gerar a visualização oficial para download em PDF ou impressão.
+                        </p>
+                    </div>
+
+                    <!-- Input CPF & Actions -->
+                    <div class="space-y-3">
+                        <div class="space-y-1.5">
+                            <label class="block text-xs uppercase tracking-wider text-on-surface-variant font-semibold" for="inp-carteirinha-cpf">
+                                CPF do Atleta <span class="text-secondary font-bold">*</span>
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-outline">
+                                    <span class="material-symbols-outlined text-[20px]">badge</span>
+                                </span>
+                                <input type="text" id="inp-carteirinha-cpf" placeholder="000.000.000-00" maxlength="14"
+                                    class="w-full h-12 pl-11 pr-4 rounded-xl bg-surface-container-low text-on-surface text-sm placeholder:text-outline/70 border border-outline-variant/60 focus:outline-none focus:border-primary focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 transition-all">
+                            </div>
+                            <span class="error-msg" id="err-carteirinha-cpf"></span>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row gap-3 pt-1">
+                            <button type="button" class="btn btn-primary h-12 px-6 rounded-xl font-semibold shadow-md flex-1 flex items-center justify-center gap-2" id="btn-buscar-carteirinha" onclick="consultarCarteirinha()">
+                                <span class="material-symbols-outlined text-[20px]">search</span>
+                                <span>Buscar Atleta</span>
+                            </button>
+                            <button type="button" class="btn btn-secondary h-12 px-5 rounded-xl font-medium flex items-center justify-center gap-1.5" onclick="limparBuscaCarteirinha()">
+                                <span class="material-symbols-outlined text-[18px]">restart_alt</span>
+                                <span>Limpar</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Notice Info Box -->
+                    <div class="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/30 flex items-start gap-2.5">
+                        <span class="material-symbols-outlined text-primary text-[20px] flex-shrink-0 mt-0.5">info</span>
+                        <p class="text-xs text-on-surface-variant leading-relaxed">
+                            Apenas atletas cadastrados e homologados no sistema INEC/NEC podem emitir sua carteirinha. Se ainda não possui cadastro, <button type="button" onclick="confirmarSelecaoTipo('atleta')" class="text-primary font-bold hover:underline">faça seu pré-cadastro aqui</button>.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Right: Information & Security Highlights (5 cols) -->
+                <div class="lg:col-span-5 bg-gradient-to-br from-primary via-primary-container to-tertiary text-on-primary rounded-2xl p-6 sm:p-8 shadow-xl relative overflow-hidden flex flex-col justify-between">
+                    <div class="absolute -right-16 -top-16 w-64 h-64 border-[32px] border-white/5 rounded-full pointer-events-none"></div>
+                    <div class="relative z-10 space-y-4">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-secondary-fixed text-[26px]">verified</span>
+                            <h3 class="font-headline font-bold text-lg text-white">Credencial Oficial INEC</h3>
+                        </div>
+                        <p class="text-xs text-white/85 leading-relaxed">
+                            A credencial digital é o documento oficial de identificação do atleta nas dependências do clube, treinos, festivais e torneios esportivos.
+                        </p>
+                        <ul class="space-y-2.5 text-xs sm:text-sm text-white/95 pt-1">
+                            <li class="flex items-start gap-2">
+                                <span class="material-symbols-outlined text-secondary-fixed text-[18px] mt-0.5 flex-shrink-0">check_circle</span>
+                                <span><strong>QR Code Dinâmico:</strong> Código seguro para autenticação instantânea de frequência e dados.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="material-symbols-outlined text-secondary-fixed text-[18px] mt-0.5 flex-shrink-0">check_circle</span>
+                                <span><strong>Personalização Flexível:</strong> Você escolhe quais campos de dados deseja exibir no documento.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="material-symbols-outlined text-secondary-fixed text-[18px] mt-0.5 flex-shrink-0">check_circle</span>
+                                <span><strong>Padrão CR80 PVC:</strong> Dimensões oficiais frente e verso prontas para plastificação ou crachá.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="material-symbols-outlined text-secondary-fixed text-[18px] mt-0.5 flex-shrink-0">check_circle</span>
+                                <span><strong>Download em PDF:</strong> Arquivo vetorizado de alta fidelidade para salvar no celular ou imprimir.</span>
+                            </li>
                         </ul>
                     </div>
-                    <label class="terms-checkbox">
-                        <input type="checkbox" id="inp-aceite-instr" required>
-                        <span class="checkmark"></span>
-                        <span>Li e concordo com os termos acima <span class="required">*</span></span>
-                    </label>
-                    <span class="error-msg" id="err-aceite-instr"></span>
+                    <div class="relative z-10 pt-4 border-t border-white/10 flex items-center justify-between text-[11px] text-white/80">
+                        <span>Temporada Esportiva 2026/2027</span>
+                        <span class="font-bold text-secondary-fixed">INEC &amp; NEC</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview & Action Area (shown after athlete lookup & generation) -->
+            <div id="carteirinha-preview-area" class="space-y-6 pt-2" style="display:none;">
+                <!-- Header Control Bar -->
+                <div class="bg-surface-container-lowest rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-3 w-full md:w-auto">
+                        <div class="w-12 h-12 rounded-xl bg-primary-fixed flex items-center justify-center text-primary flex-shrink-0">
+                            <span class="material-symbols-outlined text-[28px]">badge</span>
+                        </div>
+                        <div>
+                            <h2 class="font-headline font-bold text-lg text-on-surface" id="preview-atleta-titulo">Credencial Digital do Atleta</h2>
+                            <p class="text-xs text-on-surface-variant" id="preview-atleta-subtitulo">Visualização oficial frente e verso (Padrão CR80)</p>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-end">
+                        <button type="button" onclick="abrirModalPersonalizarCarteirinha()"
+                            class="btn btn-outline-sm h-11 px-4 rounded-xl flex items-center gap-1.5 text-xs font-semibold bg-surface-container-low hover:bg-surface-container border border-outline-variant/60 text-on-surface">
+                            <span class="material-symbols-outlined text-[18px] text-primary">tune</span>
+                            <span>Personalizar Dados</span>
+                        </button>
+                        <button type="button" onclick="imprimirCarteirinha()"
+                            class="btn btn-outline-sm h-11 px-4 rounded-xl flex items-center gap-1.5 text-xs font-semibold bg-surface-container-low hover:bg-surface-container border border-outline-variant/60 text-on-surface">
+                            <span class="material-symbols-outlined text-[18px]">print</span>
+                            <span>Imprimir</span>
+                        </button>
+                        <button type="button" onclick="baixarPDFCarteirinha()"
+                            class="btn btn-primary h-11 px-5 rounded-xl flex items-center gap-2 text-xs sm:text-sm font-semibold shadow-md" id="btn-baixar-pdf">
+                            <span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
+                            <span>Baixar em PDF</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Printable Export Area -->
+                <div class="carteirinha-export-wrapper p-6 sm:p-10 rounded-2xl shadow-xl flex flex-col items-center justify-center">
+                    <div id="carteirinha-printable" class="carteirinha-sheet flex flex-col lg:flex-row items-center justify-center gap-8 w-full">
+                        <!-- Front Face injected by JS -->
+                        <div id="carteirinha-frente-container" class="cr80-card-wrapper"></div>
+                        <!-- Back Face injected by JS -->
+                        <div id="carteirinha-verso-container" class="cr80-card-wrapper"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== FORM PRE-CADASTRO ATLETA ==================== -->
+        <form id="form-precadastro" onsubmit="return false;" novalidate style="display:none;" class="pb-28">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-8">
+                <!-- Stepper and Phase Header -->
+                <div class="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div class="flex flex-col">
+                        <div class="flex items-center gap-2 text-primary text-xs font-bold uppercase tracking-wider mb-1">
+                            <span class="material-symbols-outlined text-[18px]">verified_user</span>
+                            <span>Programa Socioesportivo INEC 2026</span>
+                        </div>
+                        <h1 class="font-headline font-bold text-2xl sm:text-3xl text-on-surface">Ficha de Inscrição Oficial do Atleta</h1>
+                        <p class="text-xs sm:text-sm text-on-surface-variant">Etapa 2 de 3: Dados Cadastrais, Filiação e Modalidades</p>
+                    </div>
+                    <!-- Progress Bar -->
+                    <div class="flex flex-col md:w-72 gap-2">
+                        <div class="flex justify-between items-center text-xs font-semibold">
+                            <span class="text-on-surface-variant">Progresso Geral</span>
+                            <span class="text-primary">65% concluído</span>
+                        </div>
+                        <div class="w-full h-2.5 bg-surface-container rounded-full overflow-hidden">
+                            <div class="h-full bg-primary rounded-full" style="width: 65%;"></div>
+                        </div>
+                        <div class="flex justify-between text-[11px] font-medium text-on-surface-variant">
+                            <span>1. Consulta</span>
+                            <span class="text-primary font-bold">2. Atleta</span>
+                            <span>3. Análise</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dual-Column Layout: Form (8 cols) + Sticky Info Sidebar (4 cols) -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    <!-- Left: Form Sections -->
+                    <div class="lg:col-span-8 flex flex-col gap-6 w-full">
+
+                        <!-- 1. Foto do Atleta -->
+                        <section class="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-100">
+                            <div class="flex items-center gap-3 mb-6">
+                                <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-primary-fixed text-primary font-headline font-bold text-sm">1</span>
+                                <h2 class="font-headline font-bold text-lg text-on-surface">Foto do Atleta <span class="text-error font-bold">*</span></h2>
+                            </div>
+                            <div class="photo-upload-area">
+                                <div class="photo-preview" id="photo-preview" onclick="document.getElementById('inp-foto').click()">
+                                    <span class="material-symbols-outlined text-[42px]">add_a_photo</span>
+                                    <span class="photo-placeholder-text">Clique para selecionar</span>
+                                </div>
+                                <input type="file" id="inp-foto" accept="image/*" class="file-input-hidden" onchange="handlePhotoSelect(this)">
+                                <button type="button" class="btn btn-outline-sm" onclick="document.getElementById('inp-foto').click()">
+                                    <span class="material-symbols-outlined text-[18px]">photo_camera</span>
+                                    <span>Escolher Foto</span>
+                                </button>
+                                <span class="file-hint">JPG ou PNG, máx. 5MB • Fundo neutro preferencial</span>
+                                <span class="file-name" id="foto-file-name"></span>
+                                <span class="error-msg" id="err-foto"></span>
+                            </div>
+                        </section>
+
+                        <!-- 2. Dados do Atleta -->
+                        <section class="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-100">
+                            <div class="flex items-center gap-3 mb-6">
+                                <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-primary-fixed text-primary font-headline font-bold text-sm">2</span>
+                                <h2 class="font-headline font-bold text-lg text-on-surface">Dados do Atleta</h2>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="form-group sm:col-span-2">
+                                    <label for="inp-nome">Nome Completo do Aluno(a) <span class="required">*</span></label>
+                                    <input type="text" id="inp-nome" placeholder="Digite o nome completo do atleta" required>
+                                    <span class="error-msg" id="err-nome"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inp-data-nasc">Data de Nascimento <span class="required">*</span></label>
+                                    <input type="text" id="inp-data-nasc" placeholder="dd/mm/aaaa" maxlength="10" required>
+                                    <span class="error-msg" id="err-data-nasc"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inp-cpf-atleta">CPF do Atleta <span class="required">*</span></label>
+                                    <input type="text" id="inp-cpf-atleta" placeholder="000.000.000-00" maxlength="14" required>
+                                    <span class="error-msg" id="err-cpf-atleta"></span>
+                                </div>
+                                <div class="form-group sm:col-span-2">
+                                    <label for="inp-rg-atleta">RG do Atleta <span class="optional">(Opcional)</span></label>
+                                    <input type="text" id="inp-rg-atleta" placeholder="00.000.000-0">
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- 3. Dados do Responsável Legal -->
+                        <section class="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-100">
+                            <div class="flex items-center gap-3 mb-6">
+                                <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-primary-fixed text-primary font-headline font-bold text-sm">3</span>
+                                <h2 class="font-headline font-bold text-lg text-on-surface">Filiação e Responsável Legal</h2>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="form-group sm:col-span-2">
+                                    <label for="inp-nome-resp">Nome Completo do Responsável <span class="required">*</span></label>
+                                    <input type="text" id="inp-nome-resp" placeholder="Nome do pai, mãe ou tutor" required>
+                                    <span class="error-msg" id="err-nome-resp"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inp-parentesco">Grau de Parentesco <span class="required">*</span></label>
+                                    <input type="text" id="inp-parentesco" placeholder="Ex: Mãe, Pai, Avó, Tutor" required>
+                                    <span class="error-msg" id="err-parentesco"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inp-cpf-resp">CPF do Responsável <span class="required">*</span></label>
+                                    <input type="text" id="inp-cpf-resp" placeholder="000.000.000-00" maxlength="14" required>
+                                    <span class="error-msg" id="err-cpf-resp"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inp-email">E-mail de Contato <span class="required">*</span></label>
+                                    <input type="email" id="inp-email" placeholder="email@exemplo.com" required>
+                                    <span class="error-msg" id="err-email"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inp-telefone">Telefone / WhatsApp <span class="required">*</span></label>
+                                    <input type="text" id="inp-telefone" placeholder="(00) 00000-0000" maxlength="15" required>
+                                    <span class="error-msg" id="err-telefone"></span>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- 4. Endereço -->
+                        <section class="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-100">
+                            <div class="flex items-center gap-3 mb-6">
+                                <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-primary-fixed text-primary font-headline font-bold text-sm">4</span>
+                                <h2 class="font-headline font-bold text-lg text-on-surface">Endereço Residencial</h2>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div class="form-group sm:col-span-2">
+                                    <label for="inp-rua">Rua / Avenida <span class="required">*</span></label>
+                                    <input type="text" id="inp-rua" placeholder="Digite a rua ou avenida" required>
+                                    <span class="error-msg" id="err-rua"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inp-numero">Número <span class="required">*</span></label>
+                                    <input type="text" id="inp-numero" placeholder="Nº" required>
+                                    <span class="error-msg" id="err-numero"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inp-bairro">Bairro <span class="required">*</span></label>
+                                    <input type="text" id="inp-bairro" placeholder="Bairro" required>
+                                    <span class="error-msg" id="err-bairro"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inp-cidade">Cidade <span class="required">*</span></label>
+                                    <input type="text" id="inp-cidade" placeholder="Cidade" required>
+                                    <span class="error-msg" id="err-cidade"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inp-cep">CEP <span class="required">*</span></label>
+                                    <input type="text" id="inp-cep" placeholder="00000-000" maxlength="9" required>
+                                    <span class="error-msg" id="err-cep"></span>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- 5. Período e Modalidades -->
+                        <section class="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-100">
+                            <div class="flex items-center gap-3 mb-6">
+                                <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-primary-fixed text-primary font-headline font-bold text-sm">5</span>
+                                <h2 class="font-headline font-bold text-lg text-on-surface">Período e Modalidades Esportivas</h2>
+                            </div>
+                            <div class="form-group mb-6">
+                                <label for="inp-periodo">Período de Preferência <span class="required">*</span></label>
+                                <select id="inp-periodo" required>
+                                    <option value="">Selecione o turno disponível...</option>
+                                    <option value="Manhã">Manhã (08h às 12h)</option>
+                                    <option value="Tarde">Tarde (13h às 17h)</option>
+                                    <option value="Noite">Noite (18h às 21h)</option>
+                                </select>
+                                <span class="error-msg" id="err-periodo"></span>
+                            </div>
+
+                            <div class="modalidades-section">
+                                <label class="block text-xs uppercase tracking-wider text-on-surface-variant font-semibold mb-3">
+                                    Modalidades Esportivas Disponíveis <span class="text-error font-bold">*</span>
+                                </label>
+                                <div class="checkbox-grid" id="mod-nec">
+                                    <div id="mod-inec" class="contents"></div>
+                                </div>
+                            </div>
+                            <span class="error-msg" id="err-modalidades"></span>
+                        </section>
+
+                        <!-- 6. Informações de Saúde -->
+                        <section class="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-100">
+                            <div class="flex items-center gap-3 mb-6">
+                                <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-primary-fixed text-primary font-headline font-bold text-sm">6</span>
+                                <h2 class="font-headline font-bold text-lg text-on-surface">Informações de Saúde e Cuidados</h2>
+                            </div>
+                            <div class="toggle-container">
+                                <span class="toggle-question">O atleta possui algum problema de saúde, alergia ou recomendação médica?</span>
+                                <div class="flex items-center gap-3">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="inp-tem-saude" onchange="toggleSaude()">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                    <span class="toggle-label-text" id="toggle-saude-text">Não</span>
+                                </div>
+                            </div>
+                            <div class="saude-details mt-4" id="saude-details" style="display:none;">
+                                <div class="form-group">
+                                    <label for="inp-info-saude">Descreva a condição de saúde, alergia, restrição ou medicamento contínuo</label>
+                                    <textarea id="inp-info-saude" placeholder="Ex: Alergia a picada de inseto, asma leve, intolerância..." rows="3"></textarea>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- 7. Documentos -->
+                        <section class="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-100">
+                            <div class="flex items-center gap-3 mb-6">
+                                <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-primary-fixed text-primary font-headline font-bold text-sm">7</span>
+                                <h2 class="font-headline font-bold text-lg text-on-surface">Documentos Comprobatórios</h2>
+                            </div>
+                            <div class="documents-grid">
+                                <div class="doc-upload-card" id="doc-aluno-card" onclick="document.getElementById('inp-doc-aluno').click()">
+                                    <div class="doc-icon">
+                                        <span class="material-symbols-outlined text-[36px]">badge</span>
+                                    </div>
+                                    <span class="doc-label">Documento do Atleta</span>
+                                    <span class="doc-status" id="doc-aluno-status">Nenhum arquivo selecionado</span>
+                                    <input type="file" id="inp-doc-aluno" accept="image/*,.pdf" class="file-input-hidden"
+                                        onchange="handleDocSelect(this, 'aluno')">
+                                    <button type="button" class="btn btn-outline-sm mt-2">Selecionar Arquivo</button>
+                                </div>
+                                <div class="doc-upload-card" id="doc-resp-card" onclick="document.getElementById('inp-doc-resp').click()">
+                                    <div class="doc-icon">
+                                        <span class="material-symbols-outlined text-[36px]">family_restroom</span>
+                                    </div>
+                                    <span class="doc-label">Documento do Responsável</span>
+                                    <span class="doc-status" id="doc-resp-status">Nenhum arquivo selecionado</span>
+                                    <input type="file" id="inp-doc-resp" accept="image/*,.pdf" class="file-input-hidden"
+                                        onchange="handleDocSelect(this, 'resp')">
+                                    <button type="button" class="btn btn-outline-sm mt-2">Selecionar Arquivo</button>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- 8. Termos e Consentimento -->
+                        <section class="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-100">
+                            <div class="flex items-center gap-3 mb-6">
+                                <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-primary-fixed text-primary font-headline font-bold text-sm">8</span>
+                                <h2 class="font-headline font-bold text-lg text-on-surface">Termos e Consentimento</h2>
+                            </div>
+                            <div class="terms-content">
+                                <div class="terms-text">
+                                    <p>Ao enviar esta solicitação de pré-cadastro, declaro que:</p>
+                                    <ul>
+                                        <li>Os dados informados são verdadeiros e de inteira responsabilidade do declarante;</li>
+                                        <li>Autorizo o armazenamento e tratamento seguro das informações e documentos fornecidos conforme a LGPD;</li>
+                                        <li>Entendo que o pré-cadastro passará por <strong>análise e homologação</strong> pela coordenação antes da efetivação da vaga;</li>
+                                        <li>Estou ciente de que a equipe poderá entrar em contato via WhatsApp ou telefone para confirmações.</li>
+                                    </ul>
+                                </div>
+                                <label class="terms-checkbox">
+                                    <input type="checkbox" id="inp-aceite" required>
+                                    <span class="checkmark"></span>
+                                    <span>Li e concordo expressamente com os termos acima <span class="text-error font-bold">*</span></span>
+                                </label>
+                                <span class="error-msg" id="err-aceite"></span>
+                            </div>
+                        </section>
+
+                    </div>
+
+                    <!-- Right: Info & Suporte (4 cols, Sticky) -->
+                    <div class="lg:col-span-4 flex flex-col gap-6 w-full lg:sticky lg:top-24">
+                        <div class="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-100 space-y-4">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary text-[24px]">info</span>
+                                <h3 class="font-headline font-bold text-base text-on-surface">Próximos Passos</h3>
+                            </div>
+                            <ul class="space-y-3 text-xs sm:text-sm text-on-surface-variant">
+                                <li class="flex items-start gap-2">
+                                    <span class="material-symbols-outlined text-primary text-[18px] mt-0.5 flex-shrink-0">check_circle</span>
+                                    <span><strong>Análise da Inscrição:</strong> Nossa coordenação avalia os dados e a documentação enviada para conferência.</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="material-symbols-outlined text-primary text-[18px] mt-0.5 flex-shrink-0">check_circle</span>
+                                    <span><strong>Confirmação de Vaga:</strong> Entramos em contato via WhatsApp ou telefone para informar polo, turma e horários.</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="material-symbols-outlined text-primary text-[18px] mt-0.5 flex-shrink-0">check_circle</span>
+                                    <span><strong>Acesso 100% Gratuito:</strong> Aulas regulares com acompanhamento esportivo e pedagógico de qualidade.</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-surface-container-low rounded-2xl p-6 space-y-3 border border-outline-variant/40">
+                            <div class="flex items-center gap-2 text-primary">
+                                <span class="material-symbols-outlined text-[22px]">support_agent</span>
+                                <h3 class="font-headline font-bold text-sm text-on-surface">Dúvidas na Inscrição?</h3>
+                            </div>
+                            <p class="text-xs text-on-surface-variant">
+                                Nossa equipe de atendimento está à disposição para auxiliar no envio da ficha ou orientar sobre os polos esportivos.
+                            </p>
+                            <button type="button" onclick="toggleWhatsappPopup(true)"
+                                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-surface-container-lowest text-primary font-bold text-xs border border-primary-fixed shadow-sm">
+                                <span class="material-symbols-outlined text-[16px]">chat</span>
+                                <span>Falar no WhatsApp</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions (Fixed bottom bar) -->
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="limparFormulario()">
+                        <span class="material-symbols-outlined text-[18px]">restart_alt</span>
+                        <span>Limpar</span>
+                    </button>
+                    <button type="button" class="btn btn-primary" id="btn-enviar" onclick="enviarPreCadastro()">
+                        <span class="material-symbols-outlined text-[18px]">send</span>
+                        <span>Enviar Pré-cadastro</span>
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <!-- ==================== FORM PRE-CADASTRO INSTRUTOR ==================== -->
+        <form id="form-instrutor" onsubmit="return false;" novalidate style="display:none;" class="pb-28">
+            <!-- Hero Banner Instrutor -->
+            <section class="relative w-full bg-gradient-to-r from-primary via-primary-container to-tertiary overflow-hidden text-on-primary py-8 sm:py-10 mb-8 shadow-md">
+                <div class="absolute -right-20 -bottom-24 w-96 h-96 rounded-full bg-white/5 blur-3xl pointer-events-none"></div>
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col items-center justify-center text-center">
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/15 backdrop-blur-md text-white text-xs font-semibold mb-3 border border-white/20 shadow-sm">
+                        <span class="material-symbols-outlined text-[16px] text-secondary-fixed">sports</span>
+                        <span>Corpo Docente &amp; Comissão Técnica • INEC &amp; NEC</span>
+                    </div>
+                    <h1 class="font-headline font-bold text-2xl sm:text-3xl lg:text-4xl text-white tracking-tight">
+                        Pré-Cadastro de Instrutores &amp; Educadores
+                    </h1>
+                    <p class="text-white/85 text-xs sm:text-sm max-w-2xl mt-2 leading-relaxed">
+                        Ficha de credenciamento profissional para professores, instrutores e coordenadores esportivos dos núcleos socioesportivos.
+                    </p>
                 </div>
             </section>
 
-            <!-- ===== Ações ===== -->
-            <div class="form-actions">
-                <button type="button" class="btn btn-secondary" onclick="limparFormularioInstrutor()">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2">
-                        <polyline points="1 4 1 10 7 10" />
-                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
-                    </svg>
-                    Limpar
-                </button>
-                <button type="button" class="btn btn-primary" id="btn-enviar-instr"
-                    onclick="enviarPreCadastroInstrutor()">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2">
-                        <line x1="22" y1="2" x2="11" y2="13" />
-                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                    </svg>
-                    Enviar Pré-cadastro
-                </button>
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:grid lg:grid-cols-12 gap-8 items-start">
+                <!-- Left Column: Instructor Form Sections (8 cols) -->
+                <div class="lg:col-span-8 flex flex-col gap-6 w-full">
+
+                    <!-- 1. Foto Oficial do Instrutor -->
+                    <section class="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-100">
+                        <div class="flex items-center gap-3 mb-6">
+                            <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-primary-fixed text-primary font-headline font-bold text-sm">1</span>
+                            <h2 class="font-headline font-bold text-lg text-on-surface">Foto Oficial do Instrutor <span class="text-error font-bold">*</span></h2>
+                        </div>
+                        <div class="photo-upload-area">
+                            <div class="photo-preview" id="photo-preview-instr" onclick="document.getElementById('inp-foto-instr').click()">
+                                <span class="material-symbols-outlined text-[42px]">account_box</span>
+                                <span class="photo-placeholder-text">Clique para selecionar</span>
+                            </div>
+                            <input type="file" id="inp-foto-instr" accept="image/*" class="file-input-hidden" onchange="handlePhotoSelectInstr(this)">
+                            <button type="button" class="btn btn-outline-sm" onclick="document.getElementById('inp-foto-instr').click()">
+                                <span class="material-symbols-outlined text-[18px]">photo_camera</span>
+                                <span>Escolher Foto</span>
+                            </button>
+                            <span class="file-hint">JPG ou PNG, máx. 5MB • Foto de rosto nítida para identificação funcional</span>
+                            <span class="file-name" id="foto-file-name-instr"></span>
+                            <span class="error-msg" id="err-foto-instr"></span>
+                        </div>
+                    </section>
+
+                    <!-- 2. Dados do Instrutor -->
+                    <section class="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-100">
+                        <div class="flex items-center gap-3 mb-6">
+                            <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-primary-fixed text-primary font-headline font-bold text-sm">2</span>
+                            <h2 class="font-headline font-bold text-lg text-on-surface">Dados Pessoais &amp; Atuação Profissional</h2>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="form-group sm:col-span-2">
+                                <label for="inp-nome-instr">Nome Completo <span class="required">*</span></label>
+                                <input type="text" id="inp-nome-instr" placeholder="Digite seu nome completo" required>
+                                <span class="error-msg" id="err-nome-instr"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="inp-cpf-instr">CPF <span class="required">*</span></label>
+                                <input type="text" id="inp-cpf-instr" placeholder="000.000.000-00" maxlength="14" required>
+                                <span class="error-msg" id="err-cpf-instr"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="inp-rg-instr">RG <span class="optional">(Opcional)</span></label>
+                                <input type="text" id="inp-rg-instr" placeholder="00.000.000-0">
+                            </div>
+                            <div class="form-group">
+                                <label for="inp-data-nasc-instr">Data de Nascimento <span class="required">*</span></label>
+                                <input type="text" id="inp-data-nasc-instr" placeholder="dd/mm/aaaa" maxlength="10" required>
+                                <span class="error-msg" id="err-data-nasc-instr"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="inp-funcao">Função / Cargo <span class="required">*</span></label>
+                                <input type="text" id="inp-funcao" placeholder="Ex: Professor de Futebol, Coordenador" maxlength="80" required>
+                                <span class="error-msg" id="err-funcao"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="inp-periodo-instr">Período de Disponibilidade <span class="required">*</span></label>
+                                <select id="inp-periodo-instr" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="Manhã">Manhã (08h às 12h)</option>
+                                    <option value="Tarde">Tarde (13h às 17h)</option>
+                                    <option value="Noite">Noite (18h às 21h)</option>
+                                </select>
+                                <span class="error-msg" id="err-periodo-instr"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="inp-nucleo-instr">Núcleo Pretendido <span class="required">*</span></label>
+                                <select id="inp-nucleo-instr" required>
+                                    <option value="">Selecione o polo...</option>
+                                    <option value="NEC">NEC</option>
+                                    <option value="INEC">INEC</option>
+                                    <option value="AMBOS">Ambos os núcleos</option>
+                                </select>
+                                <span class="error-msg" id="err-nucleo-instr"></span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 3. Contato -->
+                    <section class="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-100">
+                        <div class="flex items-center gap-3 mb-6">
+                            <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-primary-fixed text-primary font-headline font-bold text-sm">3</span>
+                            <h2 class="font-headline font-bold text-lg text-on-surface">Canais de Contato</h2>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="form-group">
+                                <label for="inp-email-instr">E-mail Profissional <span class="required">*</span></label>
+                                <input type="email" id="inp-email-instr" placeholder="professor@exemplo.com" required>
+                                <span class="error-msg" id="err-email-instr"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="inp-telefone-instr">Telefone / WhatsApp <span class="required">*</span></label>
+                                <input type="text" id="inp-telefone-instr" placeholder="(00) 00000-0000" maxlength="15" required>
+                                <span class="error-msg" id="err-telefone-instr"></span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 4. Endereço Residencial -->
+                    <section class="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-100">
+                        <div class="flex items-center gap-3 mb-6">
+                            <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-primary-fixed text-primary font-headline font-bold text-sm">4</span>
+                            <h2 class="font-headline font-bold text-lg text-on-surface">Endereço Residencial</h2>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div class="form-group sm:col-span-2">
+                                <label for="inp-rua-instr">Rua / Avenida <span class="required">*</span></label>
+                                <input type="text" id="inp-rua-instr" placeholder="Digite a rua ou avenida" required>
+                                <span class="error-msg" id="err-rua-instr"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="inp-numero-instr">Número <span class="required">*</span></label>
+                                <input type="text" id="inp-numero-instr" placeholder="Nº" required>
+                                <span class="error-msg" id="err-numero-instr"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="inp-bairro-instr">Bairro <span class="required">*</span></label>
+                                <input type="text" id="inp-bairro-instr" placeholder="Bairro" required>
+                                <span class="error-msg" id="err-bairro-instr"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="inp-cidade-instr">Cidade <span class="required">*</span></label>
+                                <input type="text" id="inp-cidade-instr" placeholder="Cidade" required>
+                                <span class="error-msg" id="err-cidade-instr"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="inp-cep-instr">CEP <span class="required">*</span></label>
+                                <input type="text" id="inp-cep-instr" placeholder="00000-000" maxlength="9" required>
+                                <span class="error-msg" id="err-cep-instr"></span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 5. Documento Técnico -->
+                    <section class="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-100">
+                        <div class="flex items-center gap-3 mb-6">
+                            <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-primary-fixed text-primary font-headline font-bold text-sm">5</span>
+                            <h2 class="font-headline font-bold text-lg text-on-surface">Documentação de Identificação ou Técnica</h2>
+                        </div>
+                        <div class="doc-upload-card" id="doc-instr-card" onclick="document.getElementById('inp-doc-instr').click()">
+                            <div class="doc-icon">
+                                <span class="material-symbols-outlined text-[36px]">assignment_ind</span>
+                            </div>
+                            <span class="doc-label">RG, CNH ou Carteira do CREF</span>
+                            <span class="doc-status" id="doc-instr-status">Nenhum arquivo selecionado</span>
+                            <input type="file" id="inp-doc-instr" accept="image/*,.pdf" class="file-input-hidden"
+                                onchange="handleDocSelectInstr(this)">
+                            <button type="button" class="btn btn-outline-sm mt-2">Selecionar Documento</button>
+                        </div>
+                    </section>
+
+                    <!-- 6. Termos e Consentimento -->
+                    <section class="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-100">
+                        <div class="flex items-center gap-3 mb-6">
+                            <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-primary-fixed text-primary font-headline font-bold text-sm">6</span>
+                            <h2 class="font-headline font-bold text-lg text-on-surface">Termos e Consentimento</h2>
+                        </div>
+                        <div class="terms-content">
+                            <div class="terms-text">
+                                <p>Ao submeter esta candidatura, declaro que:</p>
+                                <ul>
+                                    <li>Os dados informados são verdadeiros e de minha total responsabilidade profissional;</li>
+                                    <li>Autorizo o armazenamento seguro de meus dados em conformidade com a LGPD exclusivamente para o processo seletivo institucional;</li>
+                                    <li>Estou ciente de que a submissão está sujeita a análise curricular e validação de documentos pelos coordenadores do INEC/NEC.</li>
+                                </ul>
+                            </div>
+                            <label class="terms-checkbox">
+                                <input type="checkbox" id="inp-aceite-instr" required>
+                                <span class="checkmark"></span>
+                                <span>Li e concordo com os termos acima <span class="text-error font-bold">*</span></span>
+                            </label>
+                            <span class="error-msg" id="err-aceite-instr"></span>
+                        </div>
+                    </section>
+
+                    <!-- Ações Instrutor -->
+                    <div class="flex flex-col sm:flex-row items-center justify-end gap-4 pt-4">
+                        <button type="button" class="btn btn-secondary w-full sm:w-auto" onclick="limparFormularioInstrutor()">
+                            <span class="material-symbols-outlined text-[18px]">restart_alt</span>
+                            <span>Limpar</span>
+                        </button>
+                        <button type="button" class="btn btn-primary w-full sm:w-auto px-8 py-3" id="btn-enviar-instr" onclick="enviarPreCadastroInstrutor()">
+                            <span class="material-symbols-outlined text-[18px]">send</span>
+                            <span>Enviar Candidatura</span>
+                        </button>
+                    </div>
+
+                </div>
+
+                <!-- Right Column: Info & Diferenciais INEC (4 cols) -->
+                <div class="lg:col-span-4 flex flex-col gap-6 w-full lg:sticky lg:top-24">
+                    <div class="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-100 space-y-4">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-secondary text-[24px]">volunteer_activism</span>
+                            <h3 class="font-headline font-bold text-base text-on-surface">Missão &amp; Propósito INEC</h3>
+                        </div>
+                        <ul class="space-y-3 text-xs sm:text-sm text-on-surface-variant">
+                            <li class="flex items-start gap-2">
+                                <span class="material-symbols-outlined text-primary text-[18px] mt-0.5 flex-shrink-0">check_circle</span>
+                                <span><strong>Resgate e Cidadania:</strong> Acolhemos crianças e jovens em situação de vulnerabilidade, tirando-os das ruas através de um ambiente seguro e protetor.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="material-symbols-outlined text-primary text-[18px] mt-0.5 flex-shrink-0">check_circle</span>
+                                <span><strong>Incentivo ao Esporte:</strong> Formamos valores essenciais como disciplina, trabalho em equipe, respeito e superação dentro e fora das quadras.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="material-symbols-outlined text-primary text-[18px] mt-0.5 flex-shrink-0">check_circle</span>
+                                <span><strong>Inclusão 100% Gratuita:</strong> Democratizamos o acesso a diversas modalidades esportivas com materiais completos e apoio às famílias.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="material-symbols-outlined text-primary text-[18px] mt-0.5 flex-shrink-0">check_circle</span>
+                                <span><strong>Papel do Educador:</strong> Nossos instrutores são mentores e referências positivas de vida para transformar a realidade de cada aluno.</span>
+                            </li>
+                        </ul>
+                        <div class="pt-2">
+                            <div class="rounded-xl bg-surface-container p-3.5 flex items-center gap-3">
+                                <span class="material-symbols-outlined text-[26px] text-tertiary">diversity_3</span>
+                                <div>
+                                    <span class="text-xs font-bold text-on-surface block">+3.500 Vidas Impactadas</span>
+                                    <span class="text-[11px] text-on-surface-variant">Transformação social através do esporte comunitário</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-surface-container-low rounded-2xl p-6 space-y-3 border border-outline-variant/40">
+                        <div class="flex items-center gap-2 text-primary">
+                            <span class="material-symbols-outlined text-[22px]">support_agent</span>
+                            <h3 class="font-headline font-bold text-sm text-on-surface">Dúvidas sobre o Processo?</h3>
+                        </div>
+                        <p class="text-xs text-on-surface-variant">
+                            Nossa equipe de coordenação técnica pode tirar dúvidas sobre turmas, alocação e termos de voluntariado/bolsa.
+                        </p>
+                        <button type="button" onclick="toggleWhatsappPopup(true)"
+                            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-surface-container-lowest text-primary font-bold text-xs border border-primary-fixed shadow-sm">
+                            <span class="material-symbols-outlined text-[16px]">chat</span>
+                            <span>Falar com a Coordenação</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         </form>
+
     </main>
 
-    <!-- ==================== MODAL CONSULTA (4 estados) ==================== -->
-    <!--
-        Estados (controlados por ``window.ModalConsulta.show(state, payload)``):
-        - "novo":        atleta não cadastrado → libera o form.
-        - "completo":    ficha já está completa → bloqueia o form.
-        - "incompleto":  ficha cadastrada mas incompleta → libera o form
-                         pré-preenchido OU pede revisão.
-        - "pendente":    já existe solicitação de atualização em análise
-                         → bloqueia o form.
-    -->
+    <!-- ==================== MODAL CONSULTA (4 estados dinâmicos) ==================== -->
     <div class="modal-overlay" id="modal-consulta">
         <div class="modal-card" id="modal-consulta-card">
             <div id="modal-consulta-content"></div>
@@ -754,30 +1347,169 @@
     <div class="modal-overlay" id="modal-sucesso">
         <div class="modal-card">
             <div class="modal-success-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                    <polyline points="22 4 12 14.01 9 11.01" />
-                </svg>
+                <span class="material-symbols-outlined text-[36px]">task_alt</span>
             </div>
             <span class="badge-tipo" id="badge-tipo-sucesso" data-tipo="atleta">ATLETA</span>
-            <h2 class="modal-title">Pré-cadastro enviado com sucesso</h2>
-            <p class="modal-text">Os dados foram recebidos e serão analisados pela equipe responsável antes da validação
-                final.</p>
+            <h2 class="modal-title">Pré-cadastro enviado com sucesso!</h2>
+            <p class="modal-text">Os dados foram recebidos com sucesso e serão analisados pela equipe responsável antes da validação final.</p>
             <div class="protocolo-box">
                 <span class="protocolo-label">Número de Protocolo</span>
                 <span class="protocolo-number" id="protocolo-number">Aguardando envio…</span>
             </div>
             <div class="modal-actions">
-                <button class="btn btn-outline-modal" onclick="novoCadastro()">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2">
-                        <line x1="12" y1="5" x2="12" y2="19" />
-                        <line x1="5" y1="12" x2="19" y2="12" />
-                    </svg>
-                    Novo Cadastro
+                <button type="button" class="btn-outline-modal" onclick="novoCadastro()">
+                    <span class="material-symbols-outlined text-[16px]">add</span>
+                    <span>Novo Cadastro</span>
                 </button>
-                <button class="btn btn-primary-modal" onclick="fecharModal()">Fechar</button>
+                <button type="button" class="btn-primary-modal" onclick="fecharModal()">Concluir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL PERSONALIZAR CARTEIRINHA ==================== -->
+    <div class="modal-overlay" id="modal-personalizar-carteirinha" role="dialog" aria-modal="true" aria-labelledby="modal-personalizar-titulo">
+        <div class="modal-card modal-personalizar-card" id="modal-personalizar-card">
+            <!-- Modal Header -->
+            <div class="modal-personalizar-header flex items-start justify-between gap-4 pb-4 border-b border-outline-variant/30">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-primary-fixed flex items-center justify-center text-primary flex-shrink-0">
+                        <span class="material-symbols-outlined text-[24px]">tune</span>
+                    </div>
+                    <div>
+                        <h3 class="font-headline font-bold text-base sm:text-lg text-on-surface" id="modal-personalizar-titulo">Personalizar Carteirinha</h3>
+                        <p class="text-xs text-on-surface-variant">Escolha quais informações devem constar na credencial</p>
+                    </div>
+                </div>
+                <button type="button" class="modal-close-icon" onclick="fecharModalPersonalizarCarteirinha()" aria-label="Fechar">
+                    <span class="material-symbols-outlined text-[22px]">close</span>
+                </button>
+            </div>
+
+            <!-- Athlete mini profile banner -->
+            <div class="atleta-mini-banner my-4 p-3 rounded-xl bg-surface-container flex items-center gap-3">
+                <div class="w-12 h-12 rounded-lg bg-surface-container-high overflow-hidden flex items-center justify-center flex-shrink-0" id="personalizar-mini-foto">
+                    <span class="material-symbols-outlined text-outline text-[28px]">person</span>
+                </div>
+                <div class="min-w-0 flex-1 text-left">
+                    <h4 class="text-xs sm:text-sm font-bold text-on-surface truncate" id="personalizar-mini-nome">Nome do Atleta</h4>
+                    <p class="text-[11px] text-on-surface-variant truncate" id="personalizar-mini-detalhes">Categoria • Modalidade • Polo</p>
+                </div>
+            </div>
+
+            <!-- Checkbox Options Grid -->
+            <div class="personalizar-opcoes-grid text-left space-y-2 max-h-[50vh] overflow-y-auto pr-1">
+                <label class="personalizar-opcao-item">
+                    <input type="checkbox" id="chk-card-foto" checked>
+                    <span class="opcao-custom-box"></span>
+                    <div class="opcao-text">
+                        <span class="opcao-label">Foto do Atleta</span>
+                        <span class="opcao-desc">Retrato do beneficiário na frente do cartão</span>
+                    </div>
+                </label>
+                <label class="personalizar-opcao-item">
+                    <input type="checkbox" id="chk-card-nome" checked>
+                    <span class="opcao-custom-box"></span>
+                    <div class="opcao-text">
+                        <span class="opcao-label">Nome Completo</span>
+                        <span class="opcao-desc">Identificação principal do atleta</span>
+                    </div>
+                </label>
+                <label class="personalizar-opcao-item">
+                    <input type="checkbox" id="chk-card-cpf" checked>
+                    <span class="opcao-custom-box"></span>
+                    <div class="opcao-text">
+                        <span class="opcao-label">CPF do Atleta</span>
+                        <span class="opcao-desc">Documento oficial com máscara padrão</span>
+                    </div>
+                </label>
+                <label class="personalizar-opcao-item">
+                    <input type="checkbox" id="chk-card-rg" checked>
+                    <span class="opcao-custom-box"></span>
+                    <div class="opcao-text">
+                        <span class="opcao-label">RG do Atleta</span>
+                        <span class="opcao-desc">Registro Geral (se houver cadastro)</span>
+                    </div>
+                </label>
+                <label class="personalizar-opcao-item">
+                    <input type="checkbox" id="chk-card-nasc" checked>
+                    <span class="opcao-custom-box"></span>
+                    <div class="opcao-text">
+                        <span class="opcao-label">Data de Nascimento &amp; Idade</span>
+                        <span class="opcao-desc">Data de nascimento e idade calculada</span>
+                    </div>
+                </label>
+                <label class="personalizar-opcao-item">
+                    <input type="checkbox" id="chk-card-categoria" checked>
+                    <span class="opcao-custom-box"></span>
+                    <div class="opcao-text">
+                        <span class="opcao-label">Categoria Esportiva</span>
+                        <span class="opcao-desc">Ex: Sub 9, Sub 11, etc.</span>
+                    </div>
+                </label>
+                <label class="personalizar-opcao-item">
+                    <input type="checkbox" id="chk-card-modalidade" checked>
+                    <span class="opcao-custom-box"></span>
+                    <div class="opcao-text">
+                        <span class="opcao-label">Modalidade(s) Esportiva(s)</span>
+                        <span class="opcao-desc">Futsal, Futebol, Judô, etc.</span>
+                    </div>
+                </label>
+                <label class="personalizar-opcao-item">
+                    <input type="checkbox" id="chk-card-periodo" checked>
+                    <span class="opcao-custom-box"></span>
+                    <div class="opcao-text">
+                        <span class="opcao-label">Turno / Período</span>
+                        <span class="opcao-desc">Manhã, Tarde ou Noite</span>
+                    </div>
+                </label>
+                <label class="personalizar-opcao-item">
+                    <input type="checkbox" id="chk-card-nucleo" checked>
+                    <span class="opcao-custom-box"></span>
+                    <div class="opcao-text">
+                        <span class="opcao-label">Núcleo / Polo de Treino</span>
+                        <span class="opcao-desc">Polo INEC ou NEC</span>
+                    </div>
+                </label>
+                <label class="personalizar-opcao-item">
+                    <input type="checkbox" id="chk-card-responsavel" checked>
+                    <span class="opcao-custom-box"></span>
+                    <div class="opcao-text">
+                        <span class="opcao-label">Nome do Responsável Legal</span>
+                        <span class="opcao-desc">Filiação e contato no verso do cartão</span>
+                    </div>
+                </label>
+                <label class="personalizar-opcao-item">
+                    <input type="checkbox" id="chk-card-matricula" checked>
+                    <span class="opcao-custom-box"></span>
+                    <div class="opcao-text">
+                        <span class="opcao-label">Matrícula / Registro Oficial</span>
+                        <span class="opcao-desc">Código único de registro no sistema</span>
+                    </div>
+                </label>
+                <label class="personalizar-opcao-item">
+                    <input type="checkbox" id="chk-card-qrcode" checked>
+                    <span class="opcao-custom-box"></span>
+                    <div class="opcao-text">
+                        <span class="opcao-label">QR Code de Autenticidade</span>
+                        <span class="opcao-desc">Código escaneável para validação presencial</span>
+                    </div>
+                </label>
+            </div>
+
+            <!-- Actions Footer -->
+            <div class="modal-personalizar-actions flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-outline-variant/30 mt-4">
+                <button type="button" class="btn btn-secondary text-xs px-3.5 py-2" onclick="toggleTodosPersonalizar(true)">
+                    <span>Marcar Todos</span>
+                </button>
+                <div class="flex items-center gap-2">
+                    <button type="button" class="btn btn-secondary text-xs sm:text-sm px-4 py-2" onclick="fecharModalPersonalizarCarteirinha()">
+                        <span>Cancelar</span>
+                    </button>
+                    <button type="button" class="btn btn-primary text-xs sm:text-sm px-6 py-2 shadow-md" onclick="confirmarGeracaoCarteirinha()">
+                        <span class="material-symbols-outlined text-[18px]">check</span>
+                        <span>Gerar Carteirinha</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -785,7 +1517,7 @@
     <!-- ==================== LOADING OVERLAY ==================== -->
     <div class="loading-overlay" id="loading-overlay">
         <div class="loading-spinner"></div>
-        <p class="loading-text">Enviando pré-cadastro...</p>
+        <p class="loading-text">Processando solicitação...</p>
     </div>
 
     <!-- ==================== TOAST ==================== -->
@@ -795,9 +1527,8 @@
     <button type="button" class="whatsapp-fab" id="whatsapp-fab"
         aria-label="Abrir grupo do WhatsApp INEC OFICIAL"
         onclick="toggleWhatsappPopup(true)">
-        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"
-            fill="currentColor" aria-hidden="true">
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z" />
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
         </svg>
     </button>
 
@@ -805,30 +1536,116 @@
 
     <div class="whatsapp-popup" id="whatsapp-popup" role="dialog" aria-modal="true"
         aria-labelledby="whatsapp-popup-title" aria-hidden="true">
-        <button type="button" class="whatsapp-popup__close" aria-label="Fechar"
-            onclick="toggleWhatsappPopup(false)">&times;</button>
-        <div class="whatsapp-popup__icon" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
-                fill="currentColor">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z" />
+        <button type="button" class="whatsapp-popup__close" aria-label="Fechar" onclick="toggleWhatsappPopup(false)">&times;</button>
+        <div class="whatsapp-popup__icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
             </svg>
         </div>
         <h3 class="whatsapp-popup__title" id="whatsapp-popup-title">INEC OFICIAL</h3>
-        <p class="whatsapp-popup__subtitle">Grupo do WhatsApp</p>
-        <img src="qrcode.png" alt="QR code do grupo oficial INEC no WhatsApp"
-            class="whatsapp-popup__qr" width="200" height="200" loading="lazy">
-        <a href="https://chat.whatsapp.com/H7EnK9E6vNL12j6JGPP0sQ?s=sh&p=a&mlu=4&ilr=4"
-            target="_blank" rel="noopener noreferrer"
-            class="whatsapp-popup__cta">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                fill="currentColor" aria-hidden="true">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z" />
-            </svg>
-            Entrar no grupo
+        <p class="whatsapp-popup__subtitle">Grupo Oficial de Avisos no WhatsApp</p>
+        <img src="qrcode.png" alt="QR code WhatsApp" class="whatsapp-popup__qr" width="190" height="190" loading="lazy">
+        <a href="https://chat.whatsapp.com/H7EnK9E6vNL12j6JGPP0sQ?s=sh&p=a&mlu=4&ilr=4" target="_blank" rel="noopener noreferrer" class="whatsapp-popup__cta">
+            Entrar no Grupo Oficial
         </a>
     </div>
 
-    <!-- Supabase JS SDK -->
+    <!-- ==================== FOOTER ==================== -->
+    <footer class="w-full bg-surface-container-low border-t border-outline-variant/30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+                <!-- Coluna 1: Sobre INEC / NEC (5 colunas) -->
+                <div class="md:col-span-5 space-y-3.5">
+                    <div class="flex items-center gap-2.5">
+                        <img src="img/LogoINEC.png" alt="Logo INEC" class="h-8 w-auto object-contain">
+                        <img src="img/logoNEC.png" alt="Logo NEC" class="h-8 w-auto object-contain">
+                        <div class="flex flex-col">
+                            <span class="font-headline font-bold text-base text-primary tracking-tight leading-tight">INEC / NEC</span>
+                            <span class="text-[10px] text-on-surface-variant font-semibold tracking-wider uppercase">Nosso Esporte Clube</span>
+                        </div>
+                    </div>
+                    <p class="text-xs text-on-surface-variant leading-relaxed max-w-md">
+                        Instituto Nosso Esporte Clube: promoção de cidadania, inclusão social e desenvolvimento esportivo para crianças, jovens e famílias através de núcleos comunitários e atividades 100% gratuitas.
+                    </p>
+                    <div class="flex items-center gap-1.5 text-on-surface-variant text-xs pt-0.5">
+                        <span class="material-symbols-outlined text-[16px] text-tertiary">verified</span>
+                        <span>Entidade Socioesportiva Certificada</span>
+                    </div>
+                </div>
+
+                <!-- Coluna 2: Acesso Rápido (3 colunas) -->
+                <div class="md:col-span-3 space-y-3.5">
+                    <h4 class="font-headline font-bold text-xs uppercase tracking-wider text-on-surface">Acesso Rápido</h4>
+                    <ul class="space-y-2 text-xs text-on-surface-variant">
+                        <li>
+                            <button type="button" onclick="resetarParaSelecaoTipo()" class="hover:text-primary transition-colors text-left flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-[14px] text-primary">chevron_right</span>
+                                <span>Início e Consulta</span>
+                            </button>
+                        </li>
+                        <li>
+                            <button type="button" onclick="confirmarSelecaoTipo('atleta')" class="hover:text-primary transition-colors text-left flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-[14px] text-primary">chevron_right</span>
+                                <span>Pré-Cadastro Atleta</span>
+                            </button>
+                        </li>
+                        <li>
+                            <button type="button" onclick="confirmarSelecaoTipo('instrutor')" class="hover:text-primary transition-colors text-left flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-[14px] text-primary">chevron_right</span>
+                                <span>Pré-Cadastro Instrutor</span>
+                            </button>
+                        </li>
+                        <li>
+                            <button type="button" onclick="confirmarSelecaoTipo('carteirinha')" class="hover:text-primary transition-colors text-left flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-[14px] text-primary">chevron_right</span>
+                                <span>Carteirinha Digital</span>
+                            </button>
+                        </li>
+                        <li>
+                            <a href="verificar.html" class="hover:text-primary transition-colors flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-[14px] text-emerald-600">verified</span>
+                                <span>Verificar Carteirinha (QR)</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="http://localhost:3000" target="_blank" rel="noopener noreferrer" class="hover:text-primary transition-colors flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-[14px] text-primary">lock</span>
+                                <span>Acesso Administrativo</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Coluna 3: WhatsApp Oficial (4 colunas) -->
+                <div class="md:col-span-4 space-y-3.5">
+                    <h4 class="font-headline font-bold text-xs uppercase tracking-wider text-on-surface">Canal Oficial WhatsApp</h4>
+                    <p class="text-xs text-on-surface-variant leading-relaxed">
+                        Fique por dentro de avisos oficiais, cronogramas de turmas e comunicados diretamente pelo nosso canal exclusivo no WhatsApp.
+                    </p>
+                    <div class="pt-1">
+                        <button type="button" onclick="toggleWhatsappPopup(true)"
+                            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-xs shadow-sm transition-all">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
+                            </svg>
+                            <span>Entrar no Grupo Oficial</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-10 pt-6 border-t border-outline-variant/30 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-on-surface-variant">
+                <p>&copy; 2026 Instituto Nosso Esporte Clube (INEC/NEC). Todos os direitos reservados.</p>
+                <div class="flex items-center gap-4">
+                    <a href="#" class="hover:text-on-surface transition-colors">Regulamento Interno</a>
+                    <a href="#" class="hover:text-on-surface transition-colors">Privacidade &amp; LGPD</a>
+                    <a href="#" class="hover:text-on-surface transition-colors">Transparência</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Supabase JS SDK & Application Logic -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="app.js"></script>
 </body>

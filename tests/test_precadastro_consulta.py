@@ -50,7 +50,7 @@ class TestEstadosConst:
         )
         assert m, "Objeto ESTADOS não encontrado em app.js"
         body = m.group(1)
-        for nome in ("NOVO", "COMPLETO", "INCOMPLETO", "PENDENTE"):
+        for nome in ("NOVO", "COMPLETO", "INCOMPLETO", "PENDENTE", "DIVERGENTE"):
             assert re.search(rf"{nome}\s*:\s*'[a-z]+'", body), (
                 f"ESTADOS.{nome} ausente ou formato errado"
             )
@@ -61,9 +61,14 @@ class TestEstadosConst:
         # strings cruas (digitar 'novo' em vez de ESTADOS.NOVO seria
         # bug difícil de detectar).
         src = _read_app_js()
-        # As 4 strings precisam aparecer como valores literais.
-        for valor in ("'novo'", "'completo'", "'incompleto'", "'pendente'"):
+        # As 5 strings precisam aparecer como valores literais.
+        for valor in ("'novo'", "'completo'", "'incompleto'", "'pendente'", "'divergente'"):
             assert valor in src, f"String canônica {valor} ausente em app.js"
+
+    def test_modal_defs_tem_divergente(self):
+        src = _read_app_js()
+        assert "[ESTADOS.DIVERGENTE]" in src
+        assert "CPF do Responsável Divergente" in src
 
 
 class TestVerificarCadastroContract:
@@ -97,6 +102,16 @@ class TestVerificarCadastroContract:
         assert ".status === 'pendente'" not in body, (
             "Não acessar ``.status`` em pendencias — a Edge Function "
             "retorna string[], não objetos"
+        )
+
+    def test_responsavel_divergente_classifica_como_divergente(self):
+        src = _read_app_js()
+        body = _slice(src, "async function verificarCadastro()", "function abrirFormulario()")
+        assert "data.responsavel_divergente" in body, (
+            "verificarCadastro deve verificar data.responsavel_divergente"
+        )
+        assert "estado = ESTADOS.DIVERGENTE" in body, (
+            "verificarCadastro deve atribuir ESTADOS.DIVERGENTE quando responsavel_divergente for true"
         )
 
 

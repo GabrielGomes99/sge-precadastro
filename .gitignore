@@ -15,3 +15,6 @@ node_modules/
 
 # Supabase CLI scratch (gerado por `supabase db push`/deploy/inspect)
 supabase/.temp/
+
+# Tool outputs
+graphify-out/

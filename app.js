@@ -8,7 +8,7 @@ const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ==================== CONSTANTS ====================
 const MODALIDADES_INEC = ['Futebol'];
-const MODALIDADES_NEC = ['Judô', 'Jiu-Jitsu', 'Balé', 'Forró', 'Hip Hop', 'Zumba', 'Vôlei', 'Futsal', 'X1', 'Basquete', 'Tênis de Mesa', 'Handball'];
+const MODALIDADES_NEC = ['Futsal', 'Basquete', 'Vôlei', 'Judô', 'Jiu-Jitsu', 'Handebol', 'Tênis de Mesa', 'Balé & Dança', 'X1'];
 
 // Tipo de pré-cadastro em andamento ('atleta' | 'instrutor'). Setado
 // pelo modal inicial ``#modal-selecao-tipo`` e lido por ``novoCadastro``
@@ -62,6 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initConsultaMasks();
     initModalSelecaoTipo();
     initInputMasksInstrutor();
+    initCarteirinhaMasks();
 });
 
 function initConsultaMasks() {
@@ -102,10 +103,9 @@ function initModalidades() {
 }
 
 const EMOJI_MAP = {
-    'Futebol': '⚽', 'Judô': '🥋', 'Jiu-Jitsu': '🥊', 'Balé': '🩰',
-    'Forró': '💃', 'Hip Hop': '🎤', 'Zumba': '💃', 'Vôlei': '🏐',
-    'Futsal': '⚽', 'X1': '🏆', 'Basquete': '🏀', 'Tênis de Mesa': '🏓',
-    'Handball': '🤾', 'Karatê': '🥋', 'Natação': '🏊', 'Atletismo': '🏃'
+    'Futebol': '⚽', 'Futsal': '⚽', 'Basquete': '🏀', 'Vôlei': '🏐',
+    'Judô': '🥋', 'Jiu-Jitsu': '🥋', 'Handebol': '🤾', 'Handball': '🤾',
+    'Tênis de Mesa': '🏓', 'Balé & Dança': '🩰', 'Balé': '🩰', 'X1': '🏆',
 };
 
 function createCheckbox(label) {
@@ -636,13 +636,43 @@ function confirmarSelecaoTipo(tipo) {
     const overlay = document.getElementById('modal-selecao-tipo');
     if (overlay) overlay.classList.add('hidden');
 
+    const formAtleta = document.getElementById('form-precadastro');
+    const formInstr = document.getElementById('form-instrutor');
+    const consulta = document.getElementById('consulta-card');
+    const secaoCarteirinha = document.getElementById('secao-carteirinha');
+
     if (tipo === 'instrutor') {
+        if (formAtleta) formAtleta.style.display = 'none';
+        if (secaoCarteirinha) secaoCarteirinha.style.display = 'none';
+        if (consulta) consulta.style.display = 'none';
         abrirFormularioInstrutor();
+    } else if (tipo === 'carteirinha') {
+        if (formAtleta) formAtleta.style.display = 'none';
+        if (formInstr) formInstr.style.display = 'none';
+        if (consulta) consulta.style.display = 'none';
+        if (secaoCarteirinha) {
+            secaoCarteirinha.style.display = '';
+            secaoCarteirinha.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const inp = document.getElementById('inp-carteirinha-cpf');
+            if (inp) inp.focus();
+        }
     } else {
-        // Atleta: comportamento atual — o form só abre após a
-        // pré-consulta de CPF retornar estado NOVO ou INCOMPLETO.
-        // Não esconde o card de consulta; ele já é visível por padrão
-        // e o usuário digita os CPFs nele.
+        // Atleta: oculta o formulário de instrutor e a carteirinha
+        if (formInstr) formInstr.style.display = 'none';
+        if (secaoCarteirinha) secaoCarteirinha.style.display = 'none';
+
+        // Se o formulário do atleta já estiver aberto e preenchido, mantém-no;
+        // caso contrário, garante que o card de consulta esteja visível.
+        if (formAtleta && formAtleta.style.display === 'block') {
+            if (consulta) consulta.style.display = 'none';
+            formAtleta.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+            if (formAtleta) formAtleta.style.display = 'none';
+            if (consulta) {
+                consulta.style.display = '';
+                consulta.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
     }
 }
 
@@ -661,6 +691,12 @@ function resetarParaSelecaoTipo() {
     if (formAtleta) formAtleta.style.display = 'none';
     const formInstr = document.getElementById('form-instrutor');
     if (formInstr) formInstr.style.display = 'none';
+    const secaoCarteirinha = document.getElementById('secao-carteirinha');
+    if (secaoCarteirinha) secaoCarteirinha.style.display = 'none';
+    const consulta = document.getElementById('consulta-card');
+    if (consulta) consulta.style.display = '';
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ==================== CONSULTA / MODAL ESTADO ====================
@@ -682,6 +718,7 @@ const ESTADOS = Object.freeze({
     COMPLETO: 'completo',
     INCOMPLETO: 'incompleto',
     PENDENTE: 'pendente',
+    DIVERGENTE: 'divergente',
 });
 
 // Guarda o último payload retornado pela Edge Function para que o form
@@ -776,7 +813,9 @@ async function verificarCadastro() {
         consultaState.pendencias = (data && data.pendencias) || [];
 
         let estado;
-        if (data && data.encontrado === false) {
+        if (data && data.responsavel_divergente) {
+            estado = ESTADOS.DIVERGENTE;
+        } else if (data && data.encontrado === false) {
             estado = ESTADOS.NOVO;
         } else if (data && data.encontrado === true) {
             const ficha = data.status; // "completo" | "incompleto" | null
@@ -827,7 +866,9 @@ function abrirFormulario() {
     // os campos relevantes.
     const consulta = document.getElementById('consulta-card');
     const form = document.getElementById('form-precadastro');
+    const formInstr = document.getElementById('form-instrutor');
     if (consulta) consulta.style.display = 'none';
+    if (formInstr) formInstr.style.display = 'none';
     if (form) {
         form.style.display = 'block';
         window.scrollTo({ top: form.offsetTop - 20, behavior: 'smooth' });
@@ -1134,6 +1175,24 @@ const MODAL_DEFS = {
             if (btn) btn.addEventListener('click', () => modal.close());
         },
     },
+    [ESTADOS.DIVERGENTE]: {
+        iconClass: 'icon-warning',
+        iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
+        titulo: 'CPF do Responsável Divergente',
+        descricao: 'Este atleta já possui cadastro no sistema, porém o CPF do responsável informado não confere com o cadastrado. Por favor, confira o número digitado ou procure a secretaria.',
+        buttonsHtml: '<button class="btn-primary-modal" data-modal-action="corrigir-cpf">Verificar CPF do Responsável</button>',
+        onBind(modal) {
+            const btn = modal._content.querySelector('[data-modal-action="corrigir-cpf"]');
+            if (btn) btn.addEventListener('click', () => {
+                modal.close();
+                const el = document.getElementById('inp-consulta-cpf-resp');
+                if (el) {
+                    el.focus();
+                    el.select();
+                }
+            });
+        },
+    },
 };
 
 // ==================== LOADING & TOAST ====================
@@ -1173,9 +1232,109 @@ function toggleWhatsappPopup(open) {
     }
 }
 
-// Fecha o popup com a tecla ESC
+// ==================== NAVBAR FILE-TREE DROPDOWNS & MOBILE DRAWER ====================
+function toggleNavDropdown(menuId, event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    const targetMenu = document.getElementById(`menu-dropdown-${menuId}`);
+    const targetBtn = document.getElementById(`btn-dropdown-${menuId}`);
+    if (!targetMenu) return;
+
+    const isOpen = !targetMenu.classList.contains('hidden');
+
+    // Fecha todos os dropdowns abertos antes de alternar o selecionado
+    fecharTodosDropdowns();
+
+    if (!isOpen) {
+        targetMenu.classList.remove('hidden');
+        if (targetBtn) {
+            targetBtn.setAttribute('aria-expanded', 'true');
+            targetBtn.classList.add('nav-dropdown-active');
+            const chevron = targetBtn.querySelector('.nav-chevron');
+            if (chevron) chevron.classList.add('rotate-180');
+        }
+    }
+}
+
+function fecharTodosDropdowns() {
+    document.querySelectorAll('.nav-dropdown-menu').forEach(menu => menu.classList.add('hidden'));
+    document.querySelectorAll('.nav-dropdown-trigger').forEach(btn => {
+        btn.setAttribute('aria-expanded', 'false');
+        btn.classList.remove('nav-dropdown-active');
+        const chevron = btn.querySelector('.nav-chevron');
+        if (chevron) chevron.classList.remove('rotate-180');
+    });
+}
+
+function selecionarSubMenu(tipo) {
+    fecharTodosDropdowns();
+    confirmarSelecaoTipo(tipo);
+}
+
+function toggleMobileAccordion(tipo) {
+    const sub = document.getElementById(`sub-mobile-tree-${tipo}`);
+    const btn = document.getElementById(`btn-mobile-tree-${tipo}`);
+    if (!sub) return;
+
+    const isClosed = sub.classList.contains('hidden');
+    if (isClosed) {
+        sub.classList.remove('hidden');
+        if (btn) {
+            const chevron = btn.querySelector('.mobile-tree-chevron');
+            if (chevron) chevron.classList.add('rotate-180');
+        }
+    } else {
+        sub.classList.add('hidden');
+        if (btn) {
+            const chevron = btn.querySelector('.mobile-tree-chevron');
+            if (chevron) chevron.classList.remove('rotate-180');
+        }
+    }
+}
+
+// Fecha dropdowns da navbar ao clicar fora
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.nav-dropdown-root')) {
+        fecharTodosDropdowns();
+    }
+});
+
+// ==================== MOBILE NAVIGATION DRAWER (SIDEBAR) ====================
+function toggleMobileSidebar(open) {
+    const overlay = document.getElementById('mobile-sidebar-overlay');
+    const drawer = document.getElementById('mobile-sidebar');
+    if (!overlay || !drawer) return;
+    if (open) {
+        overlay.classList.add('is-open');
+        drawer.classList.add('is-open');
+        drawer.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+    } else {
+        overlay.classList.remove('is-open');
+        drawer.classList.remove('is-open');
+        drawer.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+    }
+}
+
+function navegarMobile(tipo) {
+    toggleMobileSidebar(false);
+    if (tipo === 'inicio') {
+        resetarParaSelecaoTipo();
+    } else {
+        confirmarSelecaoTipo(tipo);
+    }
+}
+
+// Fecha popups, dropdowns e gaveta móvel com a tecla ESC
 document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') toggleWhatsappPopup(false);
+    if (e.key === 'Escape') {
+        fecharTodosDropdowns();
+        toggleWhatsappPopup(false);
+        toggleMobileSidebar(false);
+    }
 });
 
 // ==================== INSTRUTOR (PIPELINE COMPLETO) ====================
@@ -1410,10 +1569,14 @@ async function enviarPreCadastroInstrutor() {
 function abrirFormularioInstrutor() {
     // Sem pré-consulta para instrutor: mostra o form direto.
     const form = document.getElementById('form-instrutor');
-    if (form) form.style.display = '';
+    const formAtleta = document.getElementById('form-precadastro');
     const consulta = document.getElementById('consulta-card');
+    if (formAtleta) formAtleta.style.display = 'none';
     if (consulta) consulta.style.display = 'none';
-    if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (form) {
+        form.style.display = '';
+        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 }
 
 function limparFormularioInstrutor() {
@@ -1438,3 +1601,463 @@ function limparFormularioInstrutor() {
     const docCard = document.getElementById('doc-instr-card');
     if (docCard) docCard.classList.remove('has-file');
 }
+
+// ==================== CARTEIRINHA DIGITAL (CR80 & PERSONALIZAÇÃO) ====================
+
+let atletaCarteirinhaAtual = null;
+let fotoAtletaDataUrl = null;
+
+function initCarteirinhaMasks() {
+    const inp = document.getElementById('inp-carteirinha-cpf');
+    if (!inp) return;
+
+    inp.addEventListener('input', () => {
+        const pos = inp.selectionStart;
+        const oldLen = inp.value.length;
+        inp.value = maskCPF(inp.value);
+        const newLen = inp.value.length;
+        const newPos = pos + (newLen - oldLen);
+        inp.setSelectionRange(newPos, newPos);
+    });
+
+    inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            consultarCarteirinha();
+        }
+    });
+}
+
+function limparBuscaCarteirinha() {
+    const inp = document.getElementById('inp-carteirinha-cpf');
+    if (inp) inp.value = '';
+    const err = document.getElementById('err-carteirinha-cpf');
+    if (err) err.textContent = '';
+    const previewArea = document.getElementById('carteirinha-preview-area');
+    if (previewArea) previewArea.style.display = 'none';
+    atletaCarteirinhaAtual = null;
+    fotoAtletaDataUrl = null;
+}
+
+function formatarDataNascimentoBR(val) {
+    if (!val) return 'Não informado';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(val)) {
+        const [y, m, d] = val.split('-');
+        return `${d}/${m}/${y}`;
+    }
+    return val;
+}
+
+async function carregarImagemComoDataUrl(url) {
+    if (!url) return null;
+    try {
+        const resp = await fetch(url, { mode: 'cors' });
+        if (!resp.ok) return url;
+        const blob = await resp.blob();
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = () => resolve(url);
+            reader.readAsDataURL(blob);
+        });
+    } catch (e) {
+        console.warn('Fallback para URL remota da foto:', e);
+        return url;
+    }
+}
+
+async function consultarCarteirinha() {
+    const inp = document.getElementById('inp-carteirinha-cpf');
+    const errEl = document.getElementById('err-carteirinha-cpf');
+    if (errEl) errEl.textContent = '';
+
+    const cpfDigits = extrairDigitos(inp ? inp.value : '');
+    if (!cpfDigits) {
+        if (errEl) errEl.textContent = 'Informe o CPF do atleta';
+        return;
+    }
+    if (!validateCPF(cpfDigits)) {
+        if (errEl) errEl.textContent = 'CPF inválido';
+        return;
+    }
+
+    const btn = document.getElementById('btn-buscar-carteirinha');
+    if (btn) btn.disabled = true;
+    showLoading(true);
+
+    try {
+        const response = await fetch(ENDPOINT_VALIDAR_ATLETA, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            },
+            body: JSON.stringify({
+                action: 'carteirinha',
+                cpf: cpfDigits
+            })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || 'Erro na consulta do atleta');
+        }
+
+        const data = result.data;
+        if (!data || !data.encontrado || !data.atleta) {
+            if (errEl) {
+                errEl.textContent = 'Nenhum cadastro de atleta encontrado com este CPF no INEC/NEC.';
+            }
+            showToast('Atleta não encontrado. Verifique o CPF ou realize o pré-cadastro.', 'warning');
+            return;
+        }
+
+        atletaCarteirinhaAtual = data.atleta;
+
+        // Pré-carrega a foto em Data URL para o canvas do PDF não falhar
+        if (atletaCarteirinhaAtual.foto_url) {
+            fotoAtletaDataUrl = await carregarImagemComoDataUrl(atletaCarteirinhaAtual.foto_url);
+        } else {
+            fotoAtletaDataUrl = null;
+        }
+
+        // Popula o banner no modal de personalização
+        const miniNome = document.getElementById('personalizar-mini-nome');
+        if (miniNome) miniNome.textContent = atletaCarteirinhaAtual.nome || 'Atleta';
+
+        const miniDetalhes = document.getElementById('personalizar-mini-detalhes');
+        if (miniDetalhes) {
+            const cat = atletaCarteirinhaAtual.categoria || 'Categoria Geral';
+            const mod = atletaCarteirinhaAtual.modalidades || 'Geral';
+            const pol = atletaCarteirinhaAtual.nucleo || 'INEC';
+            miniDetalhes.textContent = `${cat} • ${mod} • Polo ${pol}`;
+        }
+
+        const miniFoto = document.getElementById('personalizar-mini-foto');
+        if (miniFoto) {
+            if (fotoAtletaDataUrl) {
+                miniFoto.innerHTML = `<img src="${fotoAtletaDataUrl}" alt="${escapeHtml(atletaCarteirinhaAtual.nome)}" class="w-full h-full object-cover">`;
+            } else {
+                miniFoto.innerHTML = `<span class="material-symbols-outlined text-outline text-[28px]">person</span>`;
+            }
+        }
+
+        // Configuração inicial de checkboxes com base nos dados disponíveis
+        const chkRg = document.getElementById('chk-card-rg');
+        if (chkRg) chkRg.checked = !!atletaCarteirinhaAtual.rg;
+
+        const chkFoto = document.getElementById('chk-card-foto');
+        if (chkFoto) chkFoto.checked = !!fotoAtletaDataUrl;
+
+        // Abre o modal de personalização
+        abrirModalPersonalizarCarteirinha();
+
+    } catch (err) {
+        console.error('Erro ao consultar carteirinha:', err);
+        showToast('Erro ao consultar carteirinha. Verifique sua conexão e tente novamente.', 'error');
+    } finally {
+        showLoading(false);
+        if (btn) btn.disabled = false;
+    }
+}
+
+function abrirModalPersonalizarCarteirinha() {
+    const modal = document.getElementById('modal-personalizar-carteirinha');
+    if (modal) modal.classList.add('active');
+}
+
+function fecharModalPersonalizarCarteirinha() {
+    const modal = document.getElementById('modal-personalizar-carteirinha');
+    if (modal) modal.classList.remove('active');
+}
+
+function toggleTodosPersonalizar(marcar) {
+    const checks = document.querySelectorAll('#modal-personalizar-carteirinha input[type="checkbox"]');
+    checks.forEach(c => c.checked = marcar);
+}
+
+function confirmarGeracaoCarteirinha() {
+    if (!atletaCarteirinhaAtual) {
+        showToast('Nenhum atleta selecionado para gerar a carteirinha.', 'error');
+        fecharModalPersonalizarCarteirinha();
+        return;
+    }
+
+    const config = {
+        showFoto: document.getElementById('chk-card-foto')?.checked ?? true,
+        showNome: document.getElementById('chk-card-nome')?.checked ?? true,
+        showCpf: document.getElementById('chk-card-cpf')?.checked ?? true,
+        showRg: document.getElementById('chk-card-rg')?.checked ?? true,
+        showNasc: document.getElementById('chk-card-nasc')?.checked ?? true,
+        showCategoria: document.getElementById('chk-card-categoria')?.checked ?? true,
+        showModalidade: document.getElementById('chk-card-modalidade')?.checked ?? true,
+        showPeriodo: document.getElementById('chk-card-periodo')?.checked ?? true,
+        showNucleo: document.getElementById('chk-card-nucleo')?.checked ?? true,
+        showResponsavel: document.getElementById('chk-card-responsavel')?.checked ?? true,
+        showMatricula: document.getElementById('chk-card-matricula')?.checked ?? true,
+        showQrCode: document.getElementById('chk-card-qrcode')?.checked ?? true,
+    };
+
+    fecharModalPersonalizarCarteirinha();
+    renderizarCarteirinha(atletaCarteirinhaAtual, config);
+
+    const previewArea = document.getElementById('carteirinha-preview-area');
+    if (previewArea) {
+        previewArea.style.display = '';
+        previewArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    showToast('Carteirinha digital gerada com sucesso!', 'success');
+}
+
+function renderizarCarteirinha(atleta, config) {
+    const frenteContainer = document.getElementById('carteirinha-frente-container');
+    const versoContainer = document.getElementById('carteirinha-verso-container');
+    if (!frenteContainer || !versoContainer) return;
+
+    // Atualiza cabeçalho do preview
+    const tituloPreview = document.getElementById('preview-atleta-titulo');
+    if (tituloPreview) tituloPreview.textContent = `Credencial: ${atleta.nome || 'Atleta'}`;
+
+    const subtituloPreview = document.getElementById('preview-atleta-subtitulo');
+    if (subtituloPreview) {
+        subtituloPreview.textContent = `${atleta.categoria || 'Atleta'} • ${atleta.nucleo || 'INEC'} • Temporada 2026/2027`;
+    }
+
+    const matriculaId = atleta.matricula || (atleta.id ? String(atleta.id).replace(/-/g, '').slice(0, 8).toUpperCase() : '2026-REG');
+    const cpfFormatado = maskCPF(String(atleta.cpf || ''));
+    const dataNascFormatada = formatarDataNascimentoBR(atleta.data_nascimento);
+    const idadeCalculada = atleta.idade || calculateAge(dataNascFormatada) || '';
+
+    // Datas oficiais de emissão e validade (+1 ano)
+    const hoje = new Date();
+    const dataEmissaoFormatada = `${String(hoje.getDate()).padStart(2, '0')}/${String(hoje.getMonth() + 1).padStart(2, '0')}/${hoje.getFullYear()}`;
+    const dataValidade = new Date(hoje);
+    dataValidade.setFullYear(dataValidade.getFullYear() + 1);
+    const dataValidadeFormatada = `${String(dataValidade.getDate()).padStart(2, '0')}/${String(dataValidade.getMonth() + 1).padStart(2, '0')}/${dataValidade.getFullYear()}`;
+
+    // ================= FRENTE DO CARTÃO =================
+    let fotoHtml = '';
+    if (config.showFoto && fotoAtletaDataUrl) {
+        fotoHtml = `<img src="${fotoAtletaDataUrl}" alt="${escapeHtml(atleta.nome)}">`;
+    } else {
+        fotoHtml = `
+            <div class="cr80-photo-fallback-sys">
+                <span class="material-symbols-outlined text-[32px]">person</span>
+                <span>FOTO 3 × 4</span>
+            </div>
+        `;
+    }
+
+    // Campos visíveis na frente conforme personalização selecionada
+    const listaCampos = [
+        { id: 'data_nasc', show: config.showNasc, label: 'DATA DE NASCIMENTO', value: dataNascFormatada + (idadeCalculada ? ` (${idadeCalculada} ANOS)` : '') },
+        { id: 'categoria', show: config.showCategoria, label: 'CATEGORIA', value: atleta.categoria || '—' },
+        { id: 'cpf', show: config.showCpf, label: 'CPF', value: cpfFormatado || '—' },
+        { id: 'rg', show: config.showRg && atleta.rg, label: 'RG', value: atleta.rg || '—' },
+        { id: 'periodo', show: config.showPeriodo, label: 'TURNO', value: atleta.periodo || '—' },
+        { id: 'modalidade', show: config.showModalidade, label: 'MODALIDADES', value: atleta.modalidades || '—' },
+        { id: 'nucleo', show: config.showNucleo, label: 'POLO OFICIAL', value: atleta.nucleo || 'INEC' },
+        { id: 'responsavel', show: config.showResponsavel, label: 'RESPONSÁVEL', value: atleta.nome_responsavel || '—' },
+    ];
+    const camposAtivos = listaCampos.filter(c => c.show && c.value && c.value !== '—');
+    const camposTop = camposAtivos.slice(0, 3);
+    const camposExtra = camposAtivos.slice(3);
+
+    function renderCampo(label, val) {
+        return `
+            <div class="cr80-sys-field">
+                <span class="cr80-sys-field-label">${escapeHtml(label)}</span>
+                <span class="cr80-sys-field-val">${escapeHtml(val)}</span>
+                <div class="cr80-sys-field-line"></div>
+            </div>
+        `;
+    }
+
+    const camposTopHtml = camposTop.map(c => renderCampo(c.label, c.value)).join('');
+    const camposExtraHtml = camposExtra.map(c => renderCampo(c.label, c.value)).join('');
+
+    frenteContainer.innerHTML = `
+        <div class="cr80-card cr80-card-frente" id="cr80-card-frente-element">
+            <div class="cr80-top-bar">
+                <img src="img/LogoINEC.png" alt="INEC" class="cr80-sys-logo">
+                <img src="img/logoNEC.png" alt="NEC" class="cr80-sys-logo">
+            </div>
+            <div class="cr80-gold-stripe"></div>
+
+            <div class="cr80-main-row">
+                <div class="cr80-photo-frame">
+                    ${fotoHtml}
+                </div>
+                <div class="cr80-fields-col">
+                    ${config.showNome ? `
+                        <div class="cr80-sys-field">
+                            <span class="cr80-sys-field-label">NOME</span>
+                            <span class="cr80-sys-name-val">${escapeHtml(atleta.nome || 'NOME DO ATLETA')}</span>
+                            <div class="cr80-sys-field-line"></div>
+                        </div>
+                    ` : ''}
+                    ${camposTopHtml}
+                </div>
+            </div>
+
+            ${camposExtraHtml ? `
+                <div class="cr80-extra-fields">
+                    ${camposExtraHtml}
+                </div>
+            ` : ''}
+
+            <div class="cr80-bottom-row">
+                ${config.showQrCode ? `
+                    <div class="cr80-qr-square">
+                        <div id="cr80-qr-box-target"></div>
+                    </div>
+                ` : '<div></div>'}
+                ${config.showMatricula ? `
+                    <div class="cr80-matricula-col">
+                        <span class="cr80-matricula-label">MATRÍCULA</span>
+                        <span class="cr80-matricula-val">#${escapeHtml(matriculaId)}</span>
+                    </div>
+                ` : ''}
+            </div>
+
+            <div class="cr80-valores-footer">
+                <span>DISCIPLINA</span>
+                <div class="cr80-footer-dot"></div>
+                <span>RESPEITO</span>
+                <div class="cr80-footer-dot"></div>
+                <span>FOCO</span>
+                <div class="cr80-footer-dot"></div>
+                <span>SUPERAÇÃO</span>
+            </div>
+        </div>
+    `;
+
+    // ================= VERSO DO CARTÃO =================
+    versoContainer.innerHTML = `
+        <div class="cr80-card cr80-card-verso" id="cr80-card-verso-element">
+            <div class="cr80-verso-header">
+                <span>CARTEIRINHA DO ATLETA</span>
+            </div>
+            <div class="cr80-gold-stripe"></div>
+
+            <div class="cr80-verso-content">
+                <p class="cr80-verso-disclaimer">
+                    Esta carteirinha é pessoal e intransferível. Obrigatória a apresentação junto com documento oficial com foto.
+                </p>
+
+                <div class="cr80-assinatura-box">
+                    <div class="cr80-assinatura-line"></div>
+                    <span class="cr80-assinatura-label">ASSINATURA DO ATLETA</span>
+                </div>
+
+                <div class="cr80-assinatura-box">
+                    <div class="cr80-assinatura-line"></div>
+                    <span class="cr80-assinatura-label">ASSINATURA DO RESPONSÁVEL</span>
+                </div>
+
+                <div class="cr80-datas-row">
+                    <div class="cr80-data-col">
+                        <span class="cr80-data-label text-muted">EMISSÃO</span>
+                        <span class="cr80-data-val">${dataEmissaoFormatada}</span>
+                    </div>
+                    <div class="cr80-data-col text-right">
+                        <span class="cr80-data-label text-blue">VALIDADE</span>
+                        <span class="cr80-data-val text-blue">${dataValidadeFormatada}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cr80-verso-footer">
+                <span>#SOMOS INEC</span>
+            </div>
+        </div>
+    `;
+
+    // Gera o QR Code com a biblioteca qrcodejs (ou fallback)
+    if (config.showQrCode) {
+        const qrTarget = document.getElementById('cr80-qr-box-target');
+        if (qrTarget) {
+            qrTarget.innerHTML = '';
+            const origin = (typeof window !== 'undefined' && window.location.origin && !window.location.origin.startsWith('file'))
+                ? window.location.origin
+                : 'https://portal-nec-inec.site';
+            const qrText = `${origin}/verificar.html?cpf=${encodeURIComponent(atleta.cpf || '')}&id=${encodeURIComponent(matriculaId)}&val=${encodeURIComponent(dataValidadeFormatada)}`;
+            if (typeof QRCode !== 'undefined') {
+                try {
+                    new QRCode(qrTarget, {
+                        text: qrText,
+                        width: 50,
+                        height: 50,
+                        colorDark: '#070E33',
+                        colorLight: '#ffffff',
+                        correctLevel: QRCode.CorrectLevel.M
+                    });
+                } catch (qrErr) {
+                    qrTarget.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(qrText)}" alt="QR Code" style="width:50px;height:50px;object-fit:contain;">`;
+                }
+            } else {
+                qrTarget.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(qrText)}" alt="QR Code" style="width:50px;height:50px;object-fit:contain;">`;
+            }
+        }
+    }
+}
+
+async function baixarPDFCarteirinha() {
+    const element = document.getElementById('carteirinha-printable');
+    if (!element) {
+        showToast('Nenhuma carteirinha para exportar.', 'error');
+        return;
+    }
+
+    if (typeof html2pdf === 'undefined') {
+        showToast('Preparando impressão direta...', 'info');
+        window.print();
+        return;
+    }
+
+    const btn = document.getElementById('btn-baixar-pdf');
+    if (btn) btn.disabled = true;
+    showLoading(true);
+
+    try {
+        const nomeSlug = (atletaCarteirinhaAtual?.nome || 'atleta')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, '-');
+
+        const opt = {
+            margin: [10, 10, 10, 10],
+            filename: `carteirinha-${nomeSlug}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: {
+                scale: 2.5,
+                useCORS: true,
+                letterRendering: true,
+                backgroundColor: '#070E33'
+            },
+            jsPDF: {
+                unit: 'mm',
+                format: 'a4',
+                orientation: 'landscape'
+            }
+        };
+
+        await html2pdf().set(opt).from(element).save();
+        showToast('Download do PDF concluído com sucesso!', 'success');
+    } catch (err) {
+        console.error('Erro ao gerar PDF:', err);
+        showToast('Erro ao baixar PDF da carteirinha.', 'error');
+    } finally {
+        showLoading(false);
+        if (btn) btn.disabled = false;
+    }
+}
+
+function imprimirCarteirinha() {
+    window.print();
+}
+
