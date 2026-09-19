@@ -1851,25 +1851,25 @@ function renderizarCarteirinha(atleta, config) {
         `;
     }
 
-    // Campos visíveis na frente conforme personalização selecionada
-    const listaCampos = [
+    // Campos principais ao lado da foto (Data de Nascimento e CPF)
+    const camposPrincipais = [
         { id: 'data_nasc', show: config.showNasc, label: 'DATA DE NASCIMENTO', value: dataNascFormatada + (idadeCalculada ? ` (${idadeCalculada} ANOS)` : '') },
-        { id: 'categoria', show: config.showCategoria, label: 'CATEGORIA', value: atleta.categoria || '—' },
         { id: 'cpf', show: config.showCpf, label: 'CPF', value: cpfFormatado || '—' },
-        { id: 'rg', show: config.showRg && atleta.rg, label: 'RG', value: atleta.rg || '—' },
+    ].filter(c => c.show && c.value && c.value !== '—');
+
+    // Campos secundários na grade de 2 colunas abaixo da foto
+    const camposGrade = [
+        { id: 'categoria', show: config.showCategoria, label: 'CATEGORIA', value: atleta.categoria || '—' },
         { id: 'periodo', show: config.showPeriodo, label: 'TURNO', value: atleta.periodo || '—' },
         { id: 'modalidade', show: config.showModalidade, label: 'MODALIDADES', value: atleta.modalidades || '—' },
         { id: 'nucleo', show: config.showNucleo, label: 'POLO OFICIAL', value: atleta.nucleo || 'INEC' },
+        { id: 'rg', show: config.showRg && atleta.rg, label: 'RG', value: atleta.rg || '—' },
         { id: 'responsavel', show: config.showResponsavel, label: 'RESPONSÁVEL', value: atleta.nome_responsavel || '—' },
-    ];
-    const camposAtivos = listaCampos.filter(c => c.show && c.value && c.value !== '—');
-    const camposTop = camposAtivos.slice(0, 3);
-    const camposExtra = camposAtivos.slice(3);
+    ].filter(c => c.show && c.value && c.value !== '—');
 
-    function renderCampo(campo) {
-        const isFull = campo.id === 'responsavel';
+    function renderCampo(campo, isFullWidth = false) {
         return `
-            <div class="cr80-sys-field ${isFull ? 'cr80-field-full' : ''}">
+            <div class="cr80-sys-field ${isFullWidth ? 'cr80-field-full' : ''}">
                 <span class="cr80-sys-field-label">${escapeHtml(campo.label)}</span>
                 <span class="cr80-sys-field-val">${escapeHtml(campo.value)}</span>
                 <div class="cr80-sys-field-line"></div>
@@ -1877,8 +1877,12 @@ function renderizarCarteirinha(atleta, config) {
         `;
     }
 
-    const camposTopHtml = camposTop.map(c => renderCampo(c)).join('');
-    const camposExtraHtml = camposExtra.map(c => renderCampo(c)).join('');
+    const camposTopHtml = camposPrincipais.map(c => renderCampo(c, false)).join('');
+    const totalGrade = camposGrade.length;
+    const camposExtraHtml = camposGrade.map((c, idx) => {
+        const isFull = (totalGrade % 2 !== 0 && idx === totalGrade - 1);
+        return renderCampo(c, isFull);
+    }).join('');
 
     frenteContainer.innerHTML = `
         <div class="cr80-card cr80-card-frente" id="cr80-card-frente-element">
@@ -2033,19 +2037,20 @@ async function baixarPDFCarteirinha() {
 
         if (jsPDFConstructor && html2canvasFunc) {
             // Captura Frente e Verso em altíssima definição (scale: 3 = 300+ DPI nítido)
+            // Fundo branco (#ffffff) garante cantos arredondados perfeitos sobre o PDF branco
             const [canvasFrente, canvasVerso] = await Promise.all([
                 html2canvasFunc(cardFrente, {
                     scale: 3,
                     useCORS: true,
                     allowTaint: false,
-                    backgroundColor: '#0D1752',
+                    backgroundColor: '#ffffff',
                     logging: false
                 }),
                 html2canvasFunc(cardVerso, {
                     scale: 3,
                     useCORS: true,
                     allowTaint: false,
-                    backgroundColor: '#F3F5F9',
+                    backgroundColor: '#ffffff',
                     logging: false
                 })
             ]);
@@ -2086,19 +2091,19 @@ async function baixarPDFCarteirinha() {
             doc.setLineDashPattern([2, 2], 0);
             doc.rect(startX - 1.5, startY - 1.5, totalWidth + 3.0, cardHeight + 3.0);
 
-            // Linha guia de dobra central
+            // Linha guia de dobra central (conecta o topo e o fundo do retângulo sem cortar os rótulos)
             const foldX = startX + cardWidth + (gap / 2);
             doc.setDrawColor(100, 116, 139);
             doc.setLineWidth(0.35);
             doc.setLineDashPattern([1.5, 1.5], 0);
-            doc.line(foldX, startY - 3, foldX, startY + cardHeight + 3);
+            doc.line(foldX, startY - 1.5, foldX, startY + cardHeight + 1.5);
 
-            // Rótulos das Guias de Corte e Dobra (sem sobreposição)
+            // Rótulos das Guias de Corte e Dobra (espaçados 3.5mm acima da linha de corte para nunca encavalar)
             doc.setFontSize(6.5);
             doc.setTextColor(100, 116, 139);
-            doc.text('LINHA DE CORTE', startX, startY - 2.5);
-            doc.text('DOBRA CENTRAL', foldX, startY - 2.5, { align: 'center' });
-            doc.text('LINHA DE CORTE', startX + totalWidth, startY - 2.5, { align: 'right' });
+            doc.text('LINHA DE CORTE', startX - 1.5, startY - 3.5);
+            doc.text('DOBRA CENTRAL', foldX, startY - 3.5, { align: 'center' });
+            doc.text('LINHA DE CORTE', startX + totalWidth + 1.5, startY - 3.5, { align: 'right' });
 
             // Insere imagens no tamanho exato de cartão de crédito (CR-80: 54 mm × 85.6 mm)
             let imgFrente = '';
@@ -2112,7 +2117,7 @@ async function baixarPDFCarteirinha() {
                     useCORS: false,
                     allowTaint: true,
                     ignoreElements: (el) => el.tagName === 'IMG' && !el.src.startsWith('data:'),
-                    backgroundColor: '#0D1752',
+                    backgroundColor: '#ffffff',
                     logging: false
                 });
                 imgFrente = safeCanvas.toDataURL('image/png');
@@ -2126,7 +2131,7 @@ async function baixarPDFCarteirinha() {
                     scale: 2,
                     useCORS: false,
                     allowTaint: true,
-                    backgroundColor: '#F3F5F9',
+                    backgroundColor: '#ffffff',
                     logging: false
                 });
                 imgVerso = safeCanvas.toDataURL('image/png');
@@ -2163,7 +2168,7 @@ async function baixarPDFCarteirinha() {
             doc.text('4. Credencial pessoal e intransferível. Obrigatória apresentação com documento oficial do atleta.', 52, boxY + 22.5);
 
             doc.save(`carteirinha-${nomeSlug}.pdf`);
-            showToast('Carteirinha em tamanho cartão de crédito baixada com sucesso!', 'success');
+            showToast('Carteirinha emitida com sucesso!', 'success');
         } else if (typeof html2pdf !== 'undefined') {
             const opt = {
                 margin: [10, 10, 10, 10],
@@ -2182,7 +2187,7 @@ async function baixarPDFCarteirinha() {
                 }
             };
             await html2pdf().set(opt).from(printableElement).save();
-            showToast('Download do PDF concluído com sucesso!', 'success');
+            showToast('Carteirinha emitida com sucesso!', 'success');
         } else {
             showToast('Preparando impressão direta...', 'info');
             window.print();
