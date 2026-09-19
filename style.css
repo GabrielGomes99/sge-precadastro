@@ -1452,7 +1452,7 @@ body {
     flex-direction: column;
     justify-content: flex-start;
     color: #ffffff;
-    font-family: var(--font-body);
+    font-family: var(--font-body, 'Hanken Grotesk'), 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     box-sizing: border-box;
     flex-shrink: 0;
     user-select: none;
@@ -2156,29 +2156,124 @@ body {
     }
 }
 
-/* Print Overrides */
+/* Print Overrides — Carteirinha Oficial Padrão CR-80 (Cartão de Crédito 54mm x 85.6mm) */
 @media print {
+    @page {
+        size: A4 landscape;
+        margin: 10mm;
+    }
+
+    html, body {
+        background: #FFFFFF !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
     body * {
-        visibility: hidden;
+        visibility: hidden !important;
     }
-    #carteirinha-printable,
-    #carteirinha-printable * {
-        visibility: visible;
+
+    #carteirinha-preview-area,
+    #carteirinha-preview-area * {
+        visibility: visible !important;
     }
-    #carteirinha-printable {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        display: flex !important;
-        flex-direction: row !important;
-        justify-content: center !important;
-        gap: 20px !important;
-        padding: 20px !important;
+
+    #carteirinha-preview-area {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: block !important;
         background: transparent !important;
     }
+
+    /* Oculta barra de botões, modais e fab na impressão */
+    #carteirinha-preview-area > div:first-child,
+    .toast-container,
+    .whatsapp-fab,
+    .whatsapp-popup,
+    .whatsapp-overlay {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
+    .carteirinha-export-wrapper {
+        padding: 8mm 0 !important;
+        margin: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        border: none !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-height: 180mm !important;
+    }
+
+    /* Título e orientações de corte impressas */
+    .carteirinha-export-wrapper::before {
+        content: "INSTITUTO NOSSO ESPORTE CLUBE — INEC / NEC • CARTEIRINHA OFICIAL CR-80 (TAMANHO CARTÃO DE CRÉDITO)" !important;
+        display: block !important;
+        font-family: 'Hanken Grotesk', 'Montserrat', sans-serif !important;
+        font-size: 11pt !important;
+        font-weight: 800 !important;
+        color: #0D1752 !important;
+        text-align: center !important;
+        margin-bottom: 6mm !important;
+        letter-spacing: 0.5px !important;
+    }
+
+    .carteirinha-export-wrapper::after {
+        content: "✂ Recorte na linha pontilhada externa e dobre ao meio na linha central. Dimensões físicas: 54 mm × 85,6 mm." !important;
+        display: block !important;
+        font-family: 'Hanken Grotesk', 'Montserrat', sans-serif !important;
+        font-size: 8pt !important;
+        color: #64748B !important;
+        text-align: center !important;
+        margin-top: 6mm !important;
+    }
+
+    #carteirinha-printable {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 6mm !important;
+        width: auto !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+        background: transparent !important;
+    }
+
+    /* Padrão CR-80 Exato no Papel (54 mm x 85.6 mm) */
+    .cr80-card-wrapper {
+        width: 54mm !important;
+        height: 85.6mm !important;
+        max-width: 54mm !important;
+        max-height: 85.6mm !important;
+        min-width: 54mm !important;
+        min-height: 85.6mm !important;
+        overflow: hidden !important;
+        position: relative !important;
+        border: 0.35mm dashed #94A3B8 !important;
+        border-radius: 3.18mm !important;
+        box-sizing: border-box !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
     .cr80-card {
-        box-shadow: 0 0 0 1px #000000 !important;
+        width: 300px !important;
+        height: 430px !important;
+        transform: scale(0.6803, 0.7524) !important;
+        transform-origin: top left !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
     }

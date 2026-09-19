@@ -1882,8 +1882,8 @@ function renderizarCarteirinha(atleta, config) {
     frenteContainer.innerHTML = `
         <div class="cr80-card cr80-card-frente" id="cr80-card-frente-element">
             <div class="cr80-top-bar">
-                <img src="img/LogoINEC.png" alt="INEC" class="cr80-sys-logo">
-                <img src="img/logoNEC.png" alt="NEC" class="cr80-sys-logo">
+                <img src="img/logo-inec-pdf.png" alt="INEC" class="cr80-sys-logo" onerror="this.src='img/LogoINEC.png'">
+                <img src="img/logo-nec-pdf.png" alt="NEC" class="cr80-sys-logo" onerror="this.src='img/logoNEC.png'">
             </div>
             <div class="cr80-gold-stripe"></div>
 
@@ -1976,7 +1976,9 @@ function renderizarCarteirinha(atleta, config) {
         </div>
     `;
 
-    // Gera o QR Code com a biblioteca qrcodejs (ou fallback)
+    // ================= QR CODE DE AUTENTICIDADE =================
+    // Utiliza o QR Code oficial escaneável (img/qr-verificar.png)
+    // Ao escanear, abre: https://portal-nec-inec.site/verificar.html
     if (config.showQrCode) {
         const qrTarget = document.getElementById('cr80-qr-box-target');
         if (qrTarget) {
@@ -1984,37 +1986,23 @@ function renderizarCarteirinha(atleta, config) {
             const origin = (typeof window !== 'undefined' && window.location.origin && !window.location.origin.startsWith('file'))
                 ? window.location.origin
                 : 'https://portal-nec-inec.site';
-            const qrText = `${origin}/verificar.html?cpf=${encodeURIComponent(atleta.cpf || '')}&id=${encodeURIComponent(matriculaId)}&val=${encodeURIComponent(dataValidadeFormatada)}`;
-            if (typeof QRCode !== 'undefined') {
-                try {
-                    new QRCode(qrTarget, {
-                        text: qrText,
-                        width: 50,
-                        height: 50,
-                        colorDark: '#070E33',
-                        colorLight: '#ffffff',
-                        correctLevel: QRCode.CorrectLevel.M
-                    });
-                } catch (qrErr) {
-                    qrTarget.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(qrText)}" alt="QR Code" style="width:50px;height:50px;object-fit:contain;">`;
-                }
-            } else {
-                qrTarget.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(qrText)}" alt="QR Code" style="width:50px;height:50px;object-fit:contain;">`;
-            }
+            const qrUrl = `${origin}/verificar.html?cpf=${encodeURIComponent(atleta.cpf || '')}&id=${encodeURIComponent(matriculaId)}&val=${encodeURIComponent(dataValidadeFormatada)}`;
+            qrTarget.innerHTML = `
+                <a href="${qrUrl}" target="_blank" rel="noopener noreferrer" title="Verificar autenticidade da carteirinha (verificar.html?val=${encodeURIComponent(dataValidadeFormatada)})" style="display:block;width:100%;height:100%;">
+                    <img src="img/qr-verificar.png" alt="QR Code - Verificar Autenticidade" class="cr80-qr-img" style="width:100%;height:100%;object-fit:contain;display:block;border-radius:3px;">
+                </a>
+            `;
         }
     }
 }
 
 async function baixarPDFCarteirinha() {
-    const element = document.getElementById('carteirinha-printable');
-    if (!element) {
-        showToast('Nenhuma carteirinha para exportar.', 'error');
-        return;
-    }
+    const cardFrente = document.getElementById('cr80-card-frente-element');
+    const cardVerso = document.getElementById('cr80-card-verso-element');
+    const printableElement = document.getElementById('carteirinha-printable');
 
-    if (typeof html2pdf === 'undefined') {
-        showToast('Preparando impressão direta...', 'info');
-        window.print();
+    if (!cardFrente || !cardVerso || !printableElement) {
+        showToast('Nenhuma carteirinha para exportar.', 'error');
         return;
     }
 
@@ -2029,27 +2017,146 @@ async function baixarPDFCarteirinha() {
             .toLowerCase()
             .replace(/[^a-z0-9]/g, '-');
 
-        const opt = {
-            margin: [10, 10, 10, 10],
-            filename: `carteirinha-${nomeSlug}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: {
-                scale: 2.5,
-                useCORS: true,
-                letterRendering: true,
-                backgroundColor: '#070E33'
-            },
-            jsPDF: {
-                unit: 'mm',
-                format: 'a4',
-                orientation: 'landscape'
-            }
-        };
+        // Aguarda carregamento de todas as imagens presentes nos cartões
+        const allImages = Array.from(printableElement.querySelectorAll('img'));
+        await Promise.all(allImages.map(img => {
+            if (img.complete) return Promise.resolve();
+            return new Promise(res => {
+                img.onload = () => res();
+                img.onerror = () => res();
+            });
+        }));
 
-        await html2pdf().set(opt).from(element).save();
-        showToast('Download do PDF concluído com sucesso!', 'success');
+        const jsPDFConstructor = (typeof window !== 'undefined' && (window.jspdf?.jsPDF || window.jsPDF)) || null;
+
+        if (jsPDFConstructor && typeof html2canvas !== 'undefined') {
+            // Captura Frente e Verso em altíssima definição (scale: 3 = 300+ DPI nítido)
+            const [canvasFrente, canvasVerso] = await Promise.all([
+                html2canvas(cardFrente, {
+                    scale: 3,
+                    useCORS: true,
+                    allowTaint: false,
+                    backgroundColor: '#0D1752',
+                    logging: false
+                }),
+                html2canvas(cardVerso, {
+                    scale: 3,
+                    useCORS: true,
+                    allowTaint: false,
+                    backgroundColor: '#F3F5F9',
+                    logging: false
+                })
+            ]);
+
+            // Cria PDF no padrão oficial A4 Paisagem (297 mm x 210 mm)
+            const doc = new jsPDFConstructor({
+                orientation: 'landscape',
+                unit: 'mm',
+                format: 'a4'
+            });
+
+            // Dimensões Padrão CR-80 (Cartão de Crédito Físico): 54.0 mm x 85.6 mm
+            const cardWidth = 54.0;
+            const cardHeight = 85.6;
+            const gap = 4.0;
+            const totalWidth = (cardWidth * 2) + gap; // 112.0 mm
+            const startX = (297 - totalWidth) / 2;    // 92.5 mm centralizado
+            const startY = 48.0;                      // 48.0 mm vertical
+
+            // Cabeçalho Oficial no PDF
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(13);
+            doc.setTextColor(13, 23, 82);
+            doc.text('INSTITUTO NOSSO ESPORTE CLUBE — INEC / NEC', 148.5, 20, { align: 'center' });
+
+            doc.setFontSize(9.5);
+            doc.setTextColor(30, 80, 200);
+            doc.text('CARTEIRINHA OFICIAL DO BENEFICIÁRIO • TAMANHO CARTÃO DE CRÉDITO (PADRÃO CR-80)', 148.5, 27, { align: 'center' });
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            doc.setTextColor(100, 116, 139);
+            doc.text('Escala Física 1:1 (54,0 mm × 85,6 mm) • Válido com apresentação de documento com foto', 148.5, 33, { align: 'center' });
+
+            // Linha guia de corte externa (retângulo pontilhado)
+            doc.setDrawColor(180, 190, 205);
+            doc.setLineWidth(0.3);
+            doc.setLineDashPattern([2, 2], 0);
+            doc.rect(startX - 1.5, startY - 1.5, totalWidth + 3.0, cardHeight + 3.0);
+
+            // Linha guia de dobra central
+            const foldX = startX + cardWidth + (gap / 2);
+            doc.setDrawColor(100, 116, 139);
+            doc.setLineWidth(0.35);
+            doc.setLineDashPattern([1.5, 1.5], 0);
+            doc.line(foldX, startY - 3, foldX, startY + cardHeight + 3);
+
+            // Rótulos das Guias de Corte e Dobra
+            doc.setFontSize(7);
+            doc.setTextColor(100, 116, 139);
+            doc.text('✂ LINHA DE RECORTE EXTERNA', startX, startY - 3.5);
+            doc.text('DOBRA CENTRAL', foldX, startY - 3.5, { align: 'center' });
+
+            // Insere imagens no tamanho exato de cartão de crédito (CR-80: 54 mm × 85.6 mm)
+            const imgFrente = canvasFrente.toDataURL('image/png');
+            const imgVerso = canvasVerso.toDataURL('image/png');
+            doc.addImage(imgFrente, 'PNG', startX, startY, cardWidth, cardHeight, undefined, 'FAST');
+            doc.addImage(imgVerso, 'PNG', startX + cardWidth + gap, startY, cardWidth, cardHeight, undefined, 'FAST');
+
+            // Legendas abaixo de cada face
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(7.5);
+            doc.setTextColor(13, 23, 82);
+            doc.text('FRENTE (54 mm × 85,6 mm)', startX + (cardWidth / 2), startY + cardHeight + 6, { align: 'center' });
+            doc.text('VERSO (54 mm × 85,6 mm)', startX + cardWidth + gap + (cardWidth / 2), startY + cardHeight + 6, { align: 'center' });
+
+            // Caixa de instruções de uso e impressão
+            const boxY = startY + cardHeight + 11;
+            doc.setFillColor(248, 250, 252);
+            doc.setDrawColor(226, 232, 240);
+            doc.setLineDashPattern([], 0);
+            doc.roundedRect(48.5, boxY, 200, 25, 2, 2, 'FD');
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(7.5);
+            doc.setTextColor(15, 23, 42);
+            doc.text('INSTRUÇÕES PARA USO DA CARTEIRINHA:', 52, boxY + 5);
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(6.8);
+            doc.setTextColor(71, 85, 105);
+            doc.text('1. Imprima este documento em escala 100% (tamanho real / sem ajustar à página) em papel sulfite 180g ou papel fotográfico.', 52, boxY + 9.5);
+            doc.text('2. Recorte na linha pontilhada externa (✂) e dobre ao meio na linha central. Dimensão final: Cartão de Crédito CR-80 (54 × 85,6 mm).', 52, boxY + 14);
+            doc.text('3. Autenticidade: aponte a câmera para o QR Code da frente para abrir https://portal-nec-inec.site/verificar.html', 52, boxY + 18.5);
+            doc.text('4. Credencial pessoal e intransferível. Obrigatória apresentação com documento oficial do atleta.', 52, boxY + 22.5);
+
+            doc.save(`carteirinha-${nomeSlug}.pdf`);
+            showToast('Carteirinha em tamanho cartão de crédito baixada com sucesso!', 'success');
+        } else if (typeof html2pdf !== 'undefined') {
+            const opt = {
+                margin: [10, 10, 10, 10],
+                filename: `carteirinha-${nomeSlug}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: {
+                    scale: 2.5,
+                    useCORS: true,
+                    letterRendering: false,
+                    backgroundColor: '#ffffff'
+                },
+                jsPDF: {
+                    unit: 'mm',
+                    format: 'a4',
+                    orientation: 'landscape'
+                }
+            };
+            await html2pdf().set(opt).from(printableElement).save();
+            showToast('Download do PDF concluído com sucesso!', 'success');
+        } else {
+            showToast('Preparando impressão direta...', 'info');
+            window.print();
+        }
     } catch (err) {
-        console.error('Erro ao gerar PDF:', err);
+        console.error('Erro ao gerar PDF da carteirinha:', err);
         showToast('Erro ao baixar PDF da carteirinha.', 'error');
     } finally {
         showLoading(false);
@@ -2060,4 +2167,5 @@ async function baixarPDFCarteirinha() {
 function imprimirCarteirinha() {
     window.print();
 }
+
 
