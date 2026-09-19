@@ -1466,18 +1466,18 @@ body {
 }
 
 .cr80-top-bar {
-    height: 68px;
+    height: 46px;
     background-color: #070E33;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 16px;
+    padding: 0 14px;
     flex-shrink: 0;
 }
 
 .cr80-sys-logo {
-    height: 38px;
-    max-width: 110px;
+    height: 28px;
+    max-width: 100px;
     object-fit: contain;
     filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
 }
@@ -1492,13 +1492,14 @@ body {
 .cr80-main-row {
     display: flex;
     flex-direction: row;
-    padding: 14px 14px 4px 14px;
-    gap: 12px;
+    padding: 8px 14px 2px 14px;
+    gap: 10px;
+    flex-shrink: 0;
 }
 
 .cr80-photo-frame {
-    width: 92px;
-    height: 118px;
+    width: 80px;
+    height: 102px;
     border-radius: 8px;
     border: 1.5px solid #2746F5;
     background-color: rgba(255, 255, 255, 0.08);
@@ -1534,74 +1535,86 @@ body {
     min-width: 0;
     display: flex;
     flex-direction: column;
+    justify-content: center;
+    gap: 2px;
 }
 
 /* Campos Oficiais com rótulo dourado, valor branco e filete */
 .cr80-sys-field {
     display: flex;
     flex-direction: column;
-    margin-bottom: 2px;
+    min-width: 0;
+    overflow: visible;
+}
+
+.cr80-field-full {
+    grid-column: span 2;
 }
 
 .cr80-sys-field-label {
-    font-size: 6.5px;
+    font-size: 6px;
     color: #F5B921;
     letter-spacing: 0.8px;
     font-weight: 700;
     text-transform: uppercase;
-    line-height: 1.1;
-    margin-bottom: 1.5px;
+    line-height: 1.25;
+    margin-bottom: 1px;
 }
 
 .cr80-sys-name-val {
-    font-size: 12.5px;
+    font-size: 11.5px;
     font-weight: 800;
     color: #FFFFFF;
     text-transform: uppercase;
-    line-height: 1.15;
+    line-height: 1.35;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow: visible;
+    padding-bottom: 1px;
 }
 
 .cr80-sys-field-val {
-    font-size: 9.5px;
+    font-size: 8.5px;
     font-weight: 600;
     color: #FFFFFF;
     text-transform: uppercase;
-    line-height: 1.15;
+    line-height: 1.35;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow: visible;
+    padding-bottom: 1px;
 }
 
 .cr80-sys-field-line {
     border-bottom: 0.5px solid rgba(255, 255, 255, 0.22);
-    margin-top: 2.5px;
-    margin-bottom: 4.5px;
+    margin-top: 1px;
+    margin-bottom: 3px;
+    width: 100%;
 }
 
 .cr80-extra-fields {
-    padding: 0 14px;
-    display: flex;
-    flex-direction: column;
+    padding: 2px 14px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 10px;
+    row-gap: 2px;
+    flex-shrink: 0;
 }
 
 /* Linha inferior: QR Code e Matrícula */
 .cr80-bottom-row {
     margin-top: auto;
-    padding: 4px 14px 8px 14px;
+    padding: 2px 14px 4px 14px;
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
+    flex-shrink: 0;
 }
 
 .cr80-qr-square {
     background-color: #FFFFFF;
-    padding: 3px;
+    padding: 2px;
     border-radius: 5px;
-    width: 56px;
-    height: 56px;
+    width: 48px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1610,8 +1623,8 @@ body {
 
 .cr80-qr-square img,
 .cr80-qr-square canvas {
-    width: 50px !important;
-    height: 50px !important;
+    width: 44px !important;
+    height: 44px !important;
     object-fit: contain;
     display: block;
 }
@@ -1623,7 +1636,7 @@ body {
 }
 
 .cr80-matricula-label {
-    font-size: 6.5px;
+    font-size: 6px;
     color: #F5B921;
     letter-spacing: 1px;
     font-weight: 700;
@@ -1632,7 +1645,7 @@ body {
 }
 
 .cr80-matricula-val {
-    font-size: 13px;
+    font-size: 11.5px;
     font-weight: 800;
     color: #FFFFFF;
     letter-spacing: 0.5px;
@@ -1640,7 +1653,7 @@ body {
 
 /* Rodapé de Valores */
 .cr80-valores-footer {
-    height: 26px;
+    height: 22px;
     background-color: #070E33;
     display: flex;
     align-items: center;

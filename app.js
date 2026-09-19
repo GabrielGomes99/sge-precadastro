@@ -1866,18 +1866,19 @@ function renderizarCarteirinha(atleta, config) {
     const camposTop = camposAtivos.slice(0, 3);
     const camposExtra = camposAtivos.slice(3);
 
-    function renderCampo(label, val) {
+    function renderCampo(campo) {
+        const isFull = campo.id === 'responsavel';
         return `
-            <div class="cr80-sys-field">
-                <span class="cr80-sys-field-label">${escapeHtml(label)}</span>
-                <span class="cr80-sys-field-val">${escapeHtml(val)}</span>
+            <div class="cr80-sys-field ${isFull ? 'cr80-field-full' : ''}">
+                <span class="cr80-sys-field-label">${escapeHtml(campo.label)}</span>
+                <span class="cr80-sys-field-val">${escapeHtml(campo.value)}</span>
                 <div class="cr80-sys-field-line"></div>
             </div>
         `;
     }
 
-    const camposTopHtml = camposTop.map(c => renderCampo(c.label, c.value)).join('');
-    const camposExtraHtml = camposExtra.map(c => renderCampo(c.label, c.value)).join('');
+    const camposTopHtml = camposTop.map(c => renderCampo(c)).join('');
+    const camposExtraHtml = camposExtra.map(c => renderCampo(c)).join('');
 
     frenteContainer.innerHTML = `
         <div class="cr80-card cr80-card-frente" id="cr80-card-frente-element">
@@ -2092,11 +2093,12 @@ async function baixarPDFCarteirinha() {
             doc.setLineDashPattern([1.5, 1.5], 0);
             doc.line(foldX, startY - 3, foldX, startY + cardHeight + 3);
 
-            // Rótulos das Guias de Corte e Dobra
-            doc.setFontSize(7);
+            // Rótulos das Guias de Corte e Dobra (sem sobreposição)
+            doc.setFontSize(6.5);
             doc.setTextColor(100, 116, 139);
-            doc.text('✂ LINHA DE RECORTE EXTERNA', startX, startY - 3.5);
-            doc.text('DOBRA CENTRAL', foldX, startY - 3.5, { align: 'center' });
+            doc.text('LINHA DE CORTE', startX, startY - 2.5);
+            doc.text('DOBRA CENTRAL', foldX, startY - 2.5, { align: 'center' });
+            doc.text('LINHA DE CORTE', startX + totalWidth, startY - 2.5, { align: 'right' });
 
             // Insere imagens no tamanho exato de cartão de crédito (CR-80: 54 mm × 85.6 mm)
             let imgFrente = '';
@@ -2156,7 +2158,7 @@ async function baixarPDFCarteirinha() {
             doc.setFontSize(6.8);
             doc.setTextColor(71, 85, 105);
             doc.text('1. Imprima este documento em escala 100% (tamanho real / sem ajustar à página) em papel sulfite 180g ou papel fotográfico.', 52, boxY + 9.5);
-            doc.text('2. Recorte na linha pontilhada externa (✂) e dobre ao meio na linha central. Dimensão final: Cartão de Crédito CR-80 (54 × 85,6 mm).', 52, boxY + 14);
+            doc.text('2. Recorte na linha pontilhada externa e dobre ao meio na linha indicada. Dimensão final: Cartão de Crédito CR-80 (54 × 85,6 mm).', 52, boxY + 14);
             doc.text('3. Autenticidade: aponte a câmera para o QR Code da frente para abrir https://portal-nec-inec.site/verificar.html', 52, boxY + 18.5);
             doc.text('4. Credencial pessoal e intransferível. Obrigatória apresentação com documento oficial do atleta.', 52, boxY + 22.5);
 
