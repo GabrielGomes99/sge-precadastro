@@ -1841,7 +1841,7 @@ function renderizarCarteirinha(atleta, config) {
     // ================= FRENTE DO CARTÃO =================
     let fotoHtml = '';
     if (config.showFoto && fotoAtletaDataUrl) {
-        fotoHtml = `<img src="${fotoAtletaDataUrl}" alt="${escapeHtml(atleta.nome)}">`;
+        fotoHtml = `<img src="${fotoAtletaDataUrl}" alt="${escapeHtml(atleta.nome)}" crossorigin="anonymous">`;
     } else {
         fotoHtml = `
             <div class="cr80-photo-fallback-sys">
@@ -2028,18 +2028,19 @@ async function baixarPDFCarteirinha() {
         }));
 
         const jsPDFConstructor = (typeof window !== 'undefined' && (window.jspdf?.jsPDF || window.jsPDF)) || null;
+        const html2canvasFunc = typeof html2canvas !== 'undefined' ? html2canvas : null;
 
-        if (jsPDFConstructor && typeof html2canvas !== 'undefined') {
+        if (jsPDFConstructor && html2canvasFunc) {
             // Captura Frente e Verso em altíssima definição (scale: 3 = 300+ DPI nítido)
             const [canvasFrente, canvasVerso] = await Promise.all([
-                html2canvas(cardFrente, {
+                html2canvasFunc(cardFrente, {
                     scale: 3,
                     useCORS: true,
                     allowTaint: false,
                     backgroundColor: '#0D1752',
                     logging: false
                 }),
-                html2canvas(cardVerso, {
+                html2canvasFunc(cardVerso, {
                     scale: 3,
                     useCORS: true,
                     allowTaint: false,
@@ -2098,8 +2099,37 @@ async function baixarPDFCarteirinha() {
             doc.text('DOBRA CENTRAL', foldX, startY - 3.5, { align: 'center' });
 
             // Insere imagens no tamanho exato de cartão de crédito (CR-80: 54 mm × 85.6 mm)
-            const imgFrente = canvasFrente.toDataURL('image/png');
-            const imgVerso = canvasVerso.toDataURL('image/png');
+            let imgFrente = '';
+            let imgVerso = '';
+            try {
+                imgFrente = canvasFrente.toDataURL('image/png');
+            } catch (canvasErr) {
+                console.warn('Fallback para canvas alternativo da frente:', canvasErr);
+                const safeCanvas = await html2canvasFunc(cardFrente, {
+                    scale: 2,
+                    useCORS: false,
+                    allowTaint: true,
+                    ignoreElements: (el) => el.tagName === 'IMG' && !el.src.startsWith('data:'),
+                    backgroundColor: '#0D1752',
+                    logging: false
+                });
+                imgFrente = safeCanvas.toDataURL('image/png');
+            }
+
+            try {
+                imgVerso = canvasVerso.toDataURL('image/png');
+            } catch (canvasErr) {
+                console.warn('Fallback para canvas alternativo do verso:', canvasErr);
+                const safeCanvas = await html2canvasFunc(cardVerso, {
+                    scale: 2,
+                    useCORS: false,
+                    allowTaint: true,
+                    backgroundColor: '#F3F5F9',
+                    logging: false
+                });
+                imgVerso = safeCanvas.toDataURL('image/png');
+            }
+
             doc.addImage(imgFrente, 'PNG', startX, startY, cardWidth, cardHeight, undefined, 'FAST');
             doc.addImage(imgVerso, 'PNG', startX + cardWidth + gap, startY, cardWidth, cardHeight, undefined, 'FAST');
 
