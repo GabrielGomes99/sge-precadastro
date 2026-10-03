@@ -536,7 +536,57 @@
         // Inicialização
         document.addEventListener('DOMContentLoaded', async () => {
             await carregarCampeonatos();
+            iniciarLiveServiceRealtime();
         });
+
+        // Live Service: Supabase Realtime + Server-Sent Events (SSE)
+        function iniciarLiveServiceRealtime() {
+            // 1. Supabase Realtime (PostgreSQL Changes)
+            try {
+                if (supabaseClient && typeof supabaseClient.channel === 'function') {
+                    supabaseClient
+                        .channel('portal-campeonatos-live-channel')
+                        .on('postgres_changes', { event: '*', schema: 'public', table: 'campeonatos' }, () => {
+                            console.log('⚡ [Live Realtime] Campeonato atualizado no banco.');
+                            carregarCampeonatos();
+                        })
+                        .on('postgres_changes', { event: '*', schema: 'public', table: 'campeonato_atletas' }, () => {
+                            console.log('⚡ [Live Realtime] Inscrição atualizada no banco.');
+                            carregarCampeonatos();
+                            if (campeonatoAtivo) carregarAtletasDoCampeonato();
+                        })
+                        .subscribe();
+                }
+            } catch (err) {
+                console.warn('[Live Realtime] Erro ao conectar Supabase Realtime:', err);
+            }
+
+            // 2. Server-Sent Events (SSE) do SGE
+            if (typeof window !== 'undefined' && typeof EventSource !== 'undefined') {
+                try {
+                    const sseUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+                        ? 'http://localhost:3000/api/portal/campeonatos/live'
+                        : 'https://app.portal-nec-inec.site/api/portal/campeonatos/live';
+
+                    const sse = new EventSource(sseUrl);
+                    sse.onmessage = (event) => {
+                        try {
+                            const data = JSON.parse(event.data);
+                            if (data.type === 'CAMPEONATO_UPDATE' || data.type === 'PARTIDA_UPDATE') {
+                                console.log('⚡ [Live SSE] Notificação de partida/campeonato recebida:', data);
+                                carregarCampeonatos();
+                                if (campeonatoAtivo) {
+                                    carregarAtletasDoCampeonato();
+                                    renderizarResultados();
+                                }
+                            }
+                        } catch {}
+                    };
+                } catch (err) {
+                    console.warn('[Live SSE] Erro ao conectar Live SSE:', err);
+                }
+            }
+        }
 
         // 1. Carregar Campeonatos
         async function carregarCampeonatos() {
