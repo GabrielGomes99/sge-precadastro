@@ -819,7 +819,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     ${filtrados.map(item => {
                         const atleta = item.alunos || {};
-                        const isPago = item.pago === 'sim';
+                        const isPago = item.pago === true || item.pago === 'sim' || item.pago === 'pago';
                         const temComprovante = !!item.comprovante_url;
 
                         let statusBadge = isPago
@@ -972,16 +972,25 @@
                     }
                 }
 
-                // Atualizar tabela campeonato_atletas
-                const { error: updateErr } = await supabaseClient
-                    .from('campeonato_atletas')
-                    .update({
-                        comprovante_url: comprovanteUrl
-                    })
-                    .eq('campeonato_id', campId)
-                    .eq('aluno_id', alunoId);
+                // Enviar para a API segura do SGE (grava no banco e notifica painel via SSE)
+                const apiBase = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+                    ? 'http://localhost:3000'
+                    : 'https://app.portal-nec-inec.site';
 
-                if (updateErr) throw updateErr;
+                const response = await fetch(`${apiBase}/api/portal/campeonatos`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        campeonatoId: Number(campId),
+                        alunoId: Number(alunoId),
+                        comprovanteUrl: comprovanteUrl
+                    })
+                });
+
+                const resData = await response.json().catch(() => null);
+                if (!response.ok || !resData?.success) {
+                    throw new Error(resData?.error?.message || 'Falha ao registrar comprovante.');
+                }
 
                 alert('Comprovante enviado com sucesso! A administração do INEC & NEC fará a verificação.');
                 fecharModalComprovante();
