@@ -991,7 +991,7 @@ body {
     border: 1px solid var(--outline-variant);
     border-radius: var(--radius-xl);
     padding: 36px 28px;
-    max-width: 860px;
+    max-width: 1080px;
     width: 100%;
     box-shadow: var(--shadow-xl);
     text-align: center;
@@ -1014,12 +1014,18 @@ body {
 
 .modal-tipo-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 16px;
     margin-bottom: 28px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
+    .modal-tipo-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
     .modal-tipo-grid {
         grid-template-columns: 1fr;
     }
@@ -1067,6 +1073,12 @@ body {
     box-shadow: 0 0 0 3px rgba(0, 101, 119, 0.2);
 }
 
+.tipo-card[data-tipo="campeonatos"][aria-pressed="true"] {
+    border-color: #d97706;
+    background-color: #fffbeb;
+    box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.25);
+}
+
 .tipo-card-icon {
     color: var(--primary);
     display: flex;
@@ -1080,6 +1092,10 @@ body {
 
 .tipo-card[data-tipo="carteirinha"] .tipo-card-icon {
     color: var(--tertiary);
+}
+
+.tipo-card[data-tipo="campeonatos"] .tipo-card-icon {
+    color: #b45309;
 }
 
 .tipo-card-titulo {

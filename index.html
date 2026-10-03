@@ -179,6 +179,13 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Direct Link: Campeonatos -->
+                <a href="campeonatos.html"
+                    class="text-on-surface-variant hover:text-amber-700 hover:bg-amber-50 font-semibold text-xs 2xl:text-sm transition-all py-2 px-3 rounded-xl flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
+                    <span class="material-symbols-outlined text-[18px] text-amber-600">emoji_events</span>
+                    <span>Campeonatos</span>
+                </a>
             </nav>
 
             <!-- Actions on right -->
@@ -290,6 +297,15 @@
                         </a>
                     </div>
                 </div>
+
+                <!-- Campeonatos & Torneios -->
+                <a href="campeonatos.html" class="mobile-nav-item">
+                    <span class="material-symbols-outlined text-amber-600 text-[22px]">emoji_events</span>
+                    <div class="flex flex-col text-left">
+                        <span class="font-bold text-sm">Campeonatos &amp; Torneios</span>
+                        <span class="text-xs text-on-surface-variant font-normal">Próximos torneios, comprovante e resultados</span>
+                    </div>
+                </a>
             </nav>
 
             <div class="mobile-sidebar-footer">
@@ -315,8 +331,8 @@
                     Temporada Esportiva 2026/2027
                 </span>
             </div>
-            <h2 class="modal-tipo-titulo" id="modal-selecao-tipo-titulo">Bem-vindo ao Pré-Cadastro</h2>
-            <p class="modal-tipo-subtitulo">Selecione o tipo de cadastro que você deseja realizar no Instituto Nosso Esporte Clube.</p>
+            <h2 class="modal-tipo-titulo" id="modal-selecao-tipo-titulo">Bem-vindo ao Portal INEC &amp; NEC</h2>
+            <p class="modal-tipo-subtitulo">O que você deseja fazer hoje no Instituto Nosso Esporte Clube?</p>
             <div class="modal-tipo-grid">
                 <button type="button" class="tipo-card group" data-tipo="atleta" aria-pressed="false">
                     <div class="tipo-card-icon w-14 h-14 rounded-full bg-primary-fixed flex items-center justify-center text-primary group-hover:scale-105 transition-transform flex-shrink-0">
@@ -346,6 +362,16 @@
                         <span class="tipo-card-titulo">Carteirinha Digital</span>
                         <span class="tipo-card-descricao">Emissão e personalização da credencial oficial com foto e QR Code para atletas</span>
                         <span class="tipo-card-tag mt-2 text-[11px] font-bold text-tertiary px-2.5 py-0.5 rounded-full bg-tertiary-fixed/40">Emissão Oficial</span>
+                    </div>
+                </button>
+                <button type="button" class="tipo-card group" data-tipo="campeonatos" aria-pressed="false">
+                    <div class="tipo-card-icon w-14 h-14 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 group-hover:scale-105 transition-transform flex-shrink-0">
+                        <span class="material-symbols-outlined text-[32px]">emoji_events</span>
+                    </div>
+                    <div class="tipo-card-content flex flex-col items-center">
+                        <span class="tipo-card-titulo">Campeonatos</span>
+                        <span class="tipo-card-descricao">Próximos torneios, consulta de inscrição, envio de comprovante e chaveamento ao vivo</span>
+                        <span class="tipo-card-tag mt-2 text-[11px] font-bold text-amber-900 px-2.5 py-0.5 rounded-full bg-amber-100">Competições</span>
                     </div>
                 </button>
             </div>
@@ -1597,6 +1623,12 @@
                                 <span class="material-symbols-outlined text-[14px] text-primary">chevron_right</span>
                                 <span>Carteirinha Digital</span>
                             </button>
+                        </li>
+                        <li>
+                            <a href="campeonatos.html" class="hover:text-amber-700 transition-colors flex items-center gap-1.5 font-semibold text-amber-800">
+                                <span class="material-symbols-outlined text-[14px] text-amber-600">emoji_events</span>
+                                <span>Campeonatos &amp; Torneios</span>
+                            </a>
                         </li>
                         <li>
                             <a href="verificar.html" class="hover:text-primary transition-colors flex items-center gap-1.5">

@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campeonatos &amp; Torneios — INEC &amp; NEC</title>
+    <meta name="description"
+        content="Portal oficial de campeonatos, torneios, consulta de inscrição de atletas, envio de comprovantes Pix e resultados ao vivo do Instituto Nosso Esporte Clube.">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+    <link rel="apple-touch-icon" href="favicon-32.png">
+
+    <!-- Fonts: Montserrat (Headlines), Hanken Grotesk (Body), Material Symbols Outlined -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Hanken+Grotesk:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+        rel="stylesheet">
+
+    <!-- Tailwind CSS with Civic Athletic Design System tokens -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#006194",
+                        "primary-container": "#007bb9",
+                        "on-primary": "#ffffff",
+                        "on-primary-container": "#fdfcff",
+                        "primary-fixed": "#cce5ff",
+                        "primary-fixed-dim": "#93ccff",
+                        "secondary": "#795900",
+                        "secondary-container": "#ffc329",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-container": "#6f5100",
+                        "secondary-fixed": "#ffdf9f",
+                        "tertiary": "#006577",
+                        "tertiary-container": "#008096",
+                        "tertiary-fixed": "#acedff",
+                        "surface": "#faf8ff",
+                        "surface-container": "#eaedff",
+                        "surface-container-low": "#f2f3ff",
+                        "surface-container-high": "#e2e7ff",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-variant": "#dae2fd",
+                        "on-surface": "#131b2e",
+                        "on-surface-variant": "#3f4850",
+                        "outline": "#707881",
+                        "outline-variant": "#bfc7d2",
+                        "error": "#ba1a1a",
+                        "error-container": "#ffdad6"
+                    },
+                    fontFamily: {
+                        "headline": ["Montserrat", "sans-serif"],
+                        "body": ["Hanken Grotesk", "sans-serif"]
+                    }
+                }
+            }
+        };
+    </script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="bg-surface font-body text-on-surface antialiased min-h-screen flex flex-col">
+
+    <!-- ==================== TOP NAVIGATION HEADER ==================== -->
+    <header class="fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-xl border-b border-outline-variant/30 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+        <div class="h-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
+            <a href="index.html" class="flex items-center gap-3 flex-shrink-0 cursor-pointer">
+                <div class="flex items-center gap-2">
+                    <img src="img/LogoINEC.png" alt="Logo INEC" class="h-9 sm:h-10 w-auto object-contain">
+                    <img src="img/logoNEC.png" alt="Logo NEC" class="h-9 sm:h-10 w-auto object-contain">
+                </div>
+                <div class="flex flex-col">
+                    <span class="font-headline font-bold text-base sm:text-lg text-primary tracking-tight leading-none">INEC &amp; NEC</span>
+                    <span class="text-[10px] sm:text-[11px] text-on-surface-variant font-medium tracking-wide uppercase">Portal de Campeonatos</span>
+                </div>
+            </a>
+
+            <!-- Desktop Nav -->
+            <nav class="hidden lg:flex xl:flex items-center gap-2">
+                <a href="index.html"
+                    class="text-on-surface-variant hover:text-primary hover:bg-surface-container font-semibold text-xs 2xl:text-sm transition-colors py-2 px-3 rounded-xl flex items-center gap-1.5 whitespace-nowrap">
+                    <span class="material-symbols-outlined text-[18px]">home</span>
+                    <span>Início &amp; Consulta</span>
+                </a>
+
+                <a href="index.html"
+                    class="text-on-surface-variant hover:text-primary hover:bg-surface-container font-semibold text-xs 2xl:text-sm transition-colors py-2 px-3 rounded-xl flex items-center gap-1.5 whitespace-nowrap">
+                    <span class="material-symbols-outlined text-[18px] text-primary">app_registration</span>
+                    <span>Pré-Cadastro</span>
+                </a>
+
+                <a href="index.html"
+                    class="text-on-surface-variant hover:text-primary hover:bg-surface-container font-semibold text-xs 2xl:text-sm transition-colors py-2 px-3 rounded-xl flex items-center gap-1.5 whitespace-nowrap">
+                    <span class="material-symbols-outlined text-[18px] text-primary">badge</span>
+                    <span>Carteirinha</span>
+                </a>
+
+                <!-- Ativo: Campeonatos -->
+                <a href="campeonatos.html"
+                    class="bg-amber-100/80 text-amber-900 border border-amber-300 font-bold text-xs 2xl:text-sm py-2 px-3.5 rounded-xl flex items-center gap-1.5 whitespace-nowrap shadow-sm">
+                    <span class="material-symbols-outlined text-[18px] text-amber-700">emoji_events</span>
+                    <span>Campeonatos</span>
+                </a>
+            </nav>
+
+            <!-- Actions on right -->
+            <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                <a href="index.html"
+                    class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors text-xs font-semibold whitespace-nowrap">
+                    <span class="material-symbols-outlined text-primary text-[18px]">arrow_back</span>
+                    <span class="hidden sm:inline">Voltar ao</span><span>Portal</span>
+                </a>
+                <a href="https://app.portal-nec-inec.site" target="_blank" rel="noopener noreferrer"
+                    class="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary hover:bg-primary-container text-on-primary text-xs sm:text-sm font-semibold transition-all shadow-sm whitespace-nowrap">
+                    <span class="material-symbols-outlined text-[18px]">lock</span>
+                    <span>Área Restrita</span>
+                </a>
+                <!-- Mobile Hamburger Button -->
+                <button type="button" id="btn-toggle-mobile-menu" onclick="toggleMobileSidebar(true)" aria-label="Abrir menu"
+                    class="lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors">
+                    <span class="material-symbols-outlined text-[24px]">menu</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Drawer -->
+    <div id="mobile-sidebar-overlay" class="mobile-sidebar-overlay" onclick="toggleMobileSidebar(false)" aria-hidden="true"></div>
+    <aside id="mobile-sidebar" class="mobile-sidebar-drawer" role="dialog" aria-modal="true" aria-label="Menu Lateral">
+        <div class="mobile-sidebar-header">
+            <div class="flex items-center gap-2">
+                <img src="img/LogoINEC.png" alt="INEC" class="h-8 w-auto">
+                <img src="img/logoNEC.png" alt="NEC" class="h-8 w-auto">
+                <div class="flex flex-col">
+                    <span class="font-headline font-bold text-sm text-primary leading-tight">INEC &amp; NEC</span>
+                    <span class="text-[10px] text-on-surface-variant uppercase font-medium">Campeonatos</span>
+                </div>
+            </div>
+            <button type="button" onclick="toggleMobileSidebar(false)" aria-label="Fechar menu" class="mobile-sidebar-close">
+                <span class="material-symbols-outlined text-[24px]">close</span>
+            </button>
+        </div>
+        <div class="mobile-sidebar-content">
+            <nav class="mobile-nav-list space-y-2">
+                <a href="index.html" class="mobile-nav-item">
+                    <span class="material-symbols-outlined text-primary text-[22px]">home</span>
+                    <div class="flex flex-col text-left">
+                        <span class="font-bold text-sm">Início &amp; Consulta</span>
+                        <span class="text-xs text-on-surface-variant font-normal">Acessar portal principal</span>
+                    </div>
+                </a>
+                <a href="campeonatos.html" class="mobile-nav-item bg-amber-50 border border-amber-200">
+                    <span class="material-symbols-outlined text-amber-600 text-[22px]">emoji_events</span>
+                    <div class="flex flex-col text-left">
+                        <span class="font-bold text-sm text-amber-900">Campeonatos &amp; Torneios</span>
+                        <span class="text-xs text-amber-700 font-normal">Inscrições, comprovante e resultados</span>
+                    </div>
+                </a>
+                <a href="verificar.html" class="mobile-nav-item">
+                    <span class="material-symbols-outlined text-emerald-600 text-[22px]">verified</span>
+                    <div class="flex flex-col text-left">
+                        <span class="font-bold text-sm">Verificar Carteirinha (QR)</span>
+                        <span class="text-xs text-on-surface-variant font-normal">Checar validade oficial</span>
+                    </div>
+                </a>
+            </nav>
+            <div class="mobile-sidebar-footer">
+                <a href="https://app.portal-nec-inec.site" target="_blank" rel="noopener noreferrer" class="mobile-btn-restrita">
+                    <span class="material-symbols-outlined text-[20px]">lock</span>
+                    <span>Área Restrita do SGE</span>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ==================== MAIN CONTENT AREA ==================== -->
+    <main class="w-full pt-20 bg-surface flex-1">
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+            <!-- Breadcrumbs -->
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-1.5 text-on-surface-variant text-xs sm:text-sm">
+                    <a href="index.html" class="text-primary font-bold hover:underline">INEC &amp; NEC</a>
+                    <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+                    <span>Competições Socioesportivas</span>
+                    <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+                    <span class="text-on-surface font-semibold">Portal de Campeonatos</span>
+                </div>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold shadow-sm">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>Circuito Esportivo 2026/2027 Operacional</span>
+                </div>
+            </div>
+
+            <!-- Bento Hero Banner -->
+            <div class="rounded-3xl bg-gradient-to-br from-primary via-primary-container to-tertiary text-on-primary p-6 sm:p-10 relative overflow-hidden shadow-xl">
+                <!-- Geometric Decor -->
+                <div class="absolute -right-16 -top-16 w-72 h-72 border-[32px] border-white/5 rounded-full pointer-events-none"></div>
+                <div class="absolute right-12 bottom-12 w-56 h-56 bg-white/5 rounded-full blur-2xl pointer-events-none"></div>
+
+                <div class="relative z-10 space-y-6">
+                    <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+                        <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-secondary-container text-on-secondary-container text-xs font-bold shadow-sm">
+                            <span class="material-symbols-outlined text-[16px]">stars</span>
+                            Temporada Esportiva 2026/2027
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/15 backdrop-blur-md text-on-primary text-xs font-medium">
+                            <span class="material-symbols-outlined text-[16px]">emoji_events</span>
+                            Torneios Oficiais INEC &amp; NEC
+                        </span>
+                    </div>
+
+                    <div class="space-y-2 max-w-3xl">
+                        <span class="text-xs font-bold text-tertiary-fixed uppercase tracking-wider block">Central de Torneios &amp; Disputas</span>
+                        <h1 class="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight">
+                            Portal Oficial de Campeonatos
+                        </h1>
+                        <p class="text-on-primary/90 text-sm sm:text-base leading-relaxed pt-1">
+                            Acompanhe o calendário de torneios, consulte se a taxa de inscrição do atleta está quitada, envie comprovantes de pagamento via Pix com validação imediata e acompanhe as partidas e chaveamentos em tempo real.
+                        </p>
+                    </div>
+
+                    <!-- 4 KPI Cards -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
+                        <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/15">
+                            <div class="flex items-center gap-2 text-secondary-fixed mb-1">
+                                <span class="material-symbols-outlined text-[20px]">emoji_events</span>
+                                <span class="text-xs font-bold uppercase tracking-wider">Campeonatos</span>
+                            </div>
+                            <div class="text-2xl sm:text-3xl font-black font-headline" id="kpi-campeonatos-total">...</div>
+                            <div class="text-[11px] text-white/75 mt-0.5">Torneios cadastrados</div>
+                        </div>
+
+                        <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/15">
+                            <div class="flex items-center gap-2 text-secondary-fixed mb-1">
+                                <span class="material-symbols-outlined text-[20px]">groups</span>
+                                <span class="text-xs font-bold uppercase tracking-wider">Categorias</span>
+                            </div>
+                            <div class="text-2xl sm:text-3xl font-black font-headline">Sub-7 ao Sub-20</div>
+                            <div class="text-[11px] text-white/75 mt-0.5">Faixas etárias ativas</div>
+                        </div>
+
+                        <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/15">
+                            <div class="flex items-center gap-2 text-secondary-fixed mb-1">
+                                <span class="material-symbols-outlined text-[20px]">receipt_long</span>
+                                <span class="text-xs font-bold uppercase tracking-wider">Inscrições</span>
+                            </div>
+                            <div class="text-2xl sm:text-3xl font-black font-headline" id="kpi-atletas-total">...</div>
+                            <div class="text-[11px] text-white/75 mt-0.5">Atletas registrados</div>
+                        </div>
+
+                        <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/15">
+                            <div class="flex items-center gap-2 text-secondary-fixed mb-1">
+                                <span class="material-symbols-outlined text-[20px]">sports_soccer</span>
+                                <span class="text-xs font-bold uppercase tracking-wider">Partidas</span>
+                            </div>
+                            <div class="text-2xl sm:text-3xl font-black font-headline" id="kpi-partidas-total">...</div>
+                            <div class="text-[11px] text-white/75 mt-0.5">Súmulas e jogos</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Buttons Container -->
+            <div class="flex flex-wrap gap-2.5 p-1.5 rounded-2xl bg-surface-container border border-outline-variant/30 shadow-sm" role="tablist">
+                <button type="button" onclick="selecionarAba('proximos')" id="tab-btn-proximos"
+                    class="flex-1 min-w-[200px] flex items-center justify-center gap-2 py-3 px-5 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-sm bg-white text-primary">
+                    <span class="material-symbols-outlined text-[20px] text-amber-600">emoji_events</span>
+                    <span>Próximos Campeonatos</span>
+                </button>
+                <button type="button" onclick="selecionarAba('consulta')" id="tab-btn-consulta"
+                    class="flex-1 min-w-[200px] flex items-center justify-center gap-2 py-3 px-5 rounded-xl font-bold text-xs sm:text-sm transition-all text-on-surface-variant hover:text-primary hover:bg-white/60">
+                    <span class="material-symbols-outlined text-[20px] text-primary">payments</span>
+                    <span>Consulta de Inscrição &amp; Envio Pix</span>
+                </button>
+                <button type="button" onclick="selecionarAba('resultados')" id="tab-btn-resultados"
+                    class="flex-1 min-w-[200px] flex items-center justify-center gap-2 py-3 px-5 rounded-xl font-bold text-xs sm:text-sm transition-all text-on-surface-variant hover:text-primary hover:bg-white/60">
+                    <span class="material-symbols-outlined text-[20px] text-emerald-600">live_tv</span>
+                    <span>Ao Vivo &amp; Resultados</span>
+                </button>
+            </div>
+
+            <!-- ==================== ABA 1: PRÓXIMOS CAMPEONATOS ==================== -->
+            <div id="aba-proximos" class="space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold font-headline text-on-surface">Torneios e Circuitos Programados</h2>
+                        <p class="text-sm text-on-surface-variant">Confira o cronograma dos eventos, locais, faixas etárias e valores de inscrição.</p>
+                    </div>
+                </div>
+
+                <div id="lista-campeonatos-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="col-span-full py-16 text-center text-on-surface-variant">
+                        <div class="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-3"></div>
+                        <p class="font-medium text-sm">Carregando campeonatos do sistema...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== ABA 2: CONSULTA & ENVIO DE COMPROVANTE ==================== -->
+            <div id="aba-consulta" class="space-y-6 hidden">
+                <div>
+                    <h2 class="text-2xl font-bold font-headline text-on-surface">Consulta de Inscrição &amp; Envio de Comprovante</h2>
+                    <p class="text-sm text-on-surface-variant">Consulte se a inscrição do atleta foi quitada e envie a foto do comprovante Pix para liberação imediata.</p>
+                </div>
+
+                <!-- Seletor do Torneio e Busca de Atleta -->
+                <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/40 shadow-sm p-6 space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                        <div class="md:col-span-5 space-y-1.5">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant">Selecione o Torneio</label>
+                            <select id="select-campeonato-consulta" onchange="carregarAtletasDoCampeonato()"
+                                class="w-full px-4 py-3 rounded-xl border border-outline-variant bg-surface font-semibold text-sm text-on-surface focus:ring-2 focus:ring-primary focus:outline-none">
+                                <option value="">Carregando torneios...</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-7 space-y-1.5">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant">Buscar Atleta pelo Nome ou Subcategoria</label>
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span>
+                                <input type="text" id="inp-busca-atleta" oninput="filtrarAtletasConsulta()" placeholder="Ex: Lucas, Gabriel, Sub-11..."
+                                    class="w-full pl-11 pr-4 py-3 rounded-xl border border-outline-variant bg-surface font-semibold text-sm text-on-surface focus:ring-2 focus:ring-primary focus:outline-none">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lista de Atletas do Torneio -->
+                <div id="container-atletas-consulta" class="space-y-4">
+                    <div class="text-center py-12 text-on-surface-variant text-sm">
+                        Selecione um campeonato acima para verificar a relação de atletas inscritos.
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== ABA 3: AO VIVO & RESULTADOS ==================== -->
+            <div id="aba-resultados" class="space-y-6 hidden">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold font-headline text-on-surface">Ao Vivo &amp; Resultados Oficiais</h2>
+                        <p class="text-sm text-on-surface-variant">Acompanhe as partidas em tempo real, súmulas e árvore eliminatória de chaveamento.</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <select id="select-campeonato-resultados" onchange="renderizarResultados()"
+                            class="px-4 py-2.5 rounded-xl border border-outline-variant bg-surface-container font-semibold text-xs sm:text-sm text-on-surface focus:outline-none">
+                            <option value="">Carregando...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Container dos Resultados & Chaveamento -->
+                <div id="container-resultados-jogos" class="space-y-6">
+                    <div class="text-center py-16 text-on-surface-variant text-sm">
+                        Selecione um campeonato para visualizar os confrontos e chaveamentos.
+                    </div>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- ==================== MODAL DE ENVIO DE COMPROVANTE ==================== -->
+    <div id="modal-comprovante" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-surface-container-lowest rounded-3xl border border-outline-variant/60 shadow-2xl max-w-xl w-full p-6 sm:p-8 space-y-6">
+            <div class="flex items-start justify-between gap-4 pb-3 border-b border-outline-variant/20">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0">
+                        <span class="material-symbols-outlined text-[28px]">receipt_long</span>
+                    </div>
+                    <div>
+                        <h3 class="font-headline font-bold text-lg sm:text-xl text-on-surface">Enviar Comprovante Pix</h3>
+                        <p class="text-xs text-on-surface-variant" id="modal-atleta-subtitulo">Atleta: —</p>
+                    </div>
+                </div>
+                <button type="button" onclick="fecharModalComprovante()" class="text-on-surface-variant hover:text-on-surface p-1 rounded-lg">
+                    <span class="material-symbols-outlined text-[24px]">close</span>
+                </button>
+            </div>
+
+            <!-- Dados Pix da Instituição -->
+            <div class="rounded-2xl p-4 bg-amber-50/80 border border-amber-200/80 space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-[16px] text-amber-700">qr_code_2</span>
+                        Chave Pix Oficial (INEC / NEC)
+                    </span>
+                    <span class="text-xs font-extrabold text-amber-950" id="modal-valor-taxa">Taxa: R$ 0,00</span>
+                </div>
+                <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-white border border-amber-300">
+                    <span class="font-mono text-xs sm:text-sm font-bold text-slate-800 truncate" id="chave-pix-texto">pix@nec-inec.site</span>
+                    <button type="button" onclick="copiarPix()" id="btn-copiar-pix"
+                        class="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition-colors flex items-center gap-1 flex-shrink-0">
+                        <span class="material-symbols-outlined text-[16px]">content_copy</span>
+                        <span>Copiar Pix</span>
+                    </button>
+                </div>
+                <p class="text-[11px] text-amber-800 leading-tight">
+                    Favorecido: <strong>Instituto Nosso Esporte Clube</strong> • CNPJ Oficial do Clube
+                </p>
+            </div>
+
+            <!-- Formulário de Envio -->
+            <form id="form-envio-comprovante" onsubmit="enviarComprovante(event)" class="space-y-4">
+                <input type="hidden" id="modal-campeonato-id">
+                <input type="hidden" id="modal-aluno-id">
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5">Foto ou PDF do Comprovante</label>
+                    <div class="relative border-2 border-dashed border-outline-variant hover:border-primary rounded-2xl p-6 text-center cursor-pointer transition-colors bg-surface-container-low"
+                         onclick="document.getElementById('input-arquivo-comprovante').click()">
+                        <input type="file" id="input-arquivo-comprovante" accept="image/*,application/pdf" class="hidden" onchange="handleArquivoComprovante(this)">
+                        <span class="material-symbols-outlined text-[36px] text-primary mb-1">upload_file</span>
+                        <p class="text-xs font-bold text-on-surface" id="nome-arquivo-selecionado">Clique para selecionar foto ou comprovante</p>
+                        <p class="text-[11px] text-on-surface-variant mt-0.5">PNG, JPG, WEBP ou PDF até 5MB</p>
+                        <div id="preview-comprovante-img" class="mt-3 hidden max-h-48 overflow-hidden rounded-xl border border-outline-variant/40 flex justify-center">
+                            <img src="" id="img-preview-tag" class="max-h-44 object-contain rounded-lg">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1.5">Ou Código Pix / Número da Transação (Opcional)</label>
+                    <input type="text" id="input-texto-comprovante" placeholder="Ex: E00038166202609021455..."
+                        class="w-full px-4 py-2.5 rounded-xl border border-outline-variant bg-surface text-xs font-mono text-on-surface focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-2">
+                    <button type="button" onclick="fecharModalComprovante()"
+                        class="px-5 py-2.5 rounded-xl border border-outline-variant text-on-surface-variant hover:bg-surface-container font-semibold text-xs sm:text-sm transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="submit" id="btn-submit-comprovante"
+                        class="px-6 py-2.5 rounded-xl bg-primary hover:bg-primary-container text-on-primary font-bold text-xs sm:text-sm shadow-md transition-all flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-[18px]">send</span>
+                        <span>Enviar Comprovante</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== FOOTER ==================== -->
+    <footer class="bg-surface-container-lowest border-t border-outline-variant/30 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+                <div class="md:col-span-5 space-y-3">
+                    <div class="flex items-center gap-2">
+                        <img src="img/LogoINEC.png" alt="INEC" class="h-8 w-auto">
+                        <img src="img/logoNEC.png" alt="NEC" class="h-8 w-auto">
+                        <span class="font-headline font-bold text-base text-primary">INEC &amp; NEC</span>
+                    </div>
+                    <p class="text-xs text-on-surface-variant leading-relaxed">
+                        Fomento ao esporte, inclusão social e formação de atletas de alta performance através de competições organizadas e integradas.
+                    </p>
+                </div>
+                <div class="md:col-span-3 space-y-2">
+                    <h4 class="font-headline font-bold text-xs uppercase tracking-wider text-on-surface">Links Úteis</h4>
+                    <ul class="space-y-1.5 text-xs text-on-surface-variant">
+                        <li><a href="index.html" class="hover:text-primary transition-colors">Início e Pré-Cadastro</a></li>
+                        <li><a href="campeonatos.html" class="hover:text-amber-700 text-amber-800 font-bold transition-colors">Portal de Campeonatos</a></li>
+                        <li><a href="verificar.html" class="hover:text-primary transition-colors">Verificar Carteirinha (QR)</a></li>
+                    </ul>
+                </div>
+                <div class="md:col-span-4 space-y-2">
+                    <h4 class="font-headline font-bold text-xs uppercase tracking-wider text-on-surface">Acesso Restrito</h4>
+                    <p class="text-xs text-on-surface-variant">Para coordenadores e árbitros do sistema.</p>
+                    <a href="https://app.portal-nec-inec.site" target="_blank" rel="noopener noreferrer"
+                        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-white font-bold text-xs shadow-sm hover:bg-primary-container transition-all">
+                        <span class="material-symbols-outlined text-[16px]">lock</span>
+                        <span>Acessar Painel SGE</span>
+                    </a>
+                </div>
+            </div>
+            <div class="mt-8 pt-6 border-t border-outline-variant/20 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-on-surface-variant">
+                <p>&copy; 2026 Instituto Nosso Esporte Clube. Todos os direitos reservados.</p>
+                <div class="flex items-center gap-4">
+                    <span>Privacidade &amp; LGPD</span>
+                    <span>Regulamento Geral</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Supabase SDK & Portal Campeonatos Logic -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script>
+        // Supabase Client
+        const SUPABASE_URL = 'https://yoqjelcixpbygwifwirm.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlvcWplbGNpeHBieWd3aWZ3aXJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIxMzUwMzIsImV4cCI6MjA4NzcxMTAzMn0.9pHR-q6MVNp2EPckhnpb7hkBHB2t8vhF1c9WUvBiR-s';
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Estado Global
+        let campeonatosData = [];
+        let campeonatoAtivo = null;
+        let atletasDoCampeonato = [];
+        let arquivoComprovanteSelecionado = null;
+
+        // Alternância de Abas
+        function selecionarAba(aba) {
+            const abas = ['proximos', 'consulta', 'resultados'];
+            abas.forEach(a => {
+                const btn = document.getElementById(`tab-btn-${a}`);
+                const conteudo = document.getElementById(`aba-${a}`);
+                if (a === aba) {
+                    btn.className = 'flex-1 min-w-[200px] flex items-center justify-center gap-2 py-3 px-5 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-sm bg-white text-primary';
+                    conteudo.classList.remove('hidden');
+                } else {
+                    btn.className = 'flex-1 min-w-[200px] flex items-center justify-center gap-2 py-3 px-5 rounded-xl font-bold text-xs sm:text-sm transition-all text-on-surface-variant hover:text-primary hover:bg-white/60';
+                    conteudo.classList.add('hidden');
+                }
+            });
+            window.scrollTo({ top: 380, behavior: 'smooth' });
+        }
+
+        function toggleMobileSidebar(abrir) {
+            const sidebar = document.getElementById('mobile-sidebar');
+            const overlay = document.getElementById('mobile-sidebar-overlay');
+            if (!sidebar || !overlay) return;
+            if (abrir) {
+                sidebar.classList.add('open');
+                overlay.classList.add('active');
+            } else {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+            }
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', async () => {
+            await carregarCampeonatos();
+        });
+
+        // 1. Carregar Campeonatos
+        async function carregarCampeonatos() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('campeonatos')
+                    .select('*')
+                    .order('data_inicio', { ascending: false });
+
+                if (error) throw error;
+                campeonatosData = data || [];
+
+                // Atualizar KPIs
+                document.getElementById('kpi-campeonatos-total').textContent = campeonatosData.length;
+                let totalPartidas = 0;
+                campeonatosData.forEach(c => {
+                    if (c.competicao && c.competicao.partidas) {
+                        totalPartidas += c.competicao.partidas.length;
+                    }
+                });
+                document.getElementById('kpi-partidas-total').textContent = totalPartidas;
+
+                // Contar Atletas
+                const { count } = await supabaseClient
+                    .from('campeonato_atletas')
+                    .select('*', { count: 'exact', head: true });
+                document.getElementById('kpi-atletas-total').textContent = count || 0;
+
+                renderizarCardsCampeonatos();
+                preencherSelectsCampeonato();
+
+                if (campeonatosData.length > 0) {
+                    campeonatoAtivo = campeonatosData[0];
+                    carregarAtletasDoCampeonato();
+                    renderizarResultados();
+                }
+            } catch (err) {
+                console.error('Erro ao carregar campeonatos:', err);
+                document.getElementById('lista-campeonatos-cards').innerHTML = `
+                    <div class="col-span-full p-8 text-center bg-red-50 text-red-700 rounded-2xl border border-red-200">
+                        Erro ao carregar campeonatos. Por favor, tente novamente mais tarde.
+                    </div>
+                `;
+            }
+        }
+
+        // 2. Renderizar Cards dos Campeonatos
+        function renderizarCardsCampeonatos() {
+            const container = document.getElementById('lista-campeonatos-cards');
+            if (!campeonatosData || campeonatosData.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full py-16 text-center text-on-surface-variant bg-surface-container-low rounded-3xl border border-outline-variant/30">
+                        <span class="material-symbols-outlined text-[48px] text-outline mb-2">sports_soccer</span>
+                        <p class="font-bold text-base text-on-surface">Nenhum campeonato cadastrado no momento</p>
+                        <p class="text-xs text-on-surface-variant mt-1">Fique atento às próximas temporadas e torneios que serão publicados aqui.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = campeonatosData.map(c => {
+                const subcats = Array.isArray(c.subcategorias) ? c.subcategorias : [];
+                const valorFormatado = (c.valor_inscricao && c.valor_inscricao > 0)
+                    ? Number(c.valor_inscricao).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                    : 'Gratuito';
+
+                const dataFormatada = c.data_inicio ? new Date(c.data_inicio + 'T00:00:00').toLocaleDateString('pt-BR') : 'Data a definir';
+
+                return `
+                    <div class="bg-surface-container-lowest rounded-3xl border border-outline-variant/40 shadow-md hover:shadow-xl transition-all p-6 flex flex-col justify-between space-y-5">
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                    Inscrições Abertas
+                                </span>
+                                <span class="text-xs font-bold text-amber-700 flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[16px]">payments</span>
+                                    <span>${valorFormatado}</span>
+                                </span>
+                            </div>
+
+                            <h3 class="font-headline font-extrabold text-xl text-on-surface leading-tight">
+                                ${c.nome}
+                            </h3>
+
+                            <div class="space-y-1.5 text-xs text-on-surface-variant">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-[18px] text-primary">calendar_month</span>
+                                    <span>Início: <strong>${dataFormatada}</strong></span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-[18px] text-primary">pin_drop</span>
+                                    <span>Local: <strong>${c.local || 'Campo Oficial INEC'}</strong></span>
+                                </div>
+                            </div>
+
+                            <div class="pt-2">
+                                <span class="block text-[10px] font-bold uppercase tracking-wider text-outline mb-1.5">Subcategorias Participantes</span>
+                                <div class="flex flex-wrap gap-1.5">
+                                    ${subcats.map(s => `<span class="px-2.5 py-0.5 rounded-lg bg-surface-container text-primary font-bold text-[11px]">${s}</span>`).join('')}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-t border-outline-variant/20 flex flex-col sm:flex-row gap-2">
+                            <button type="button" onclick="irParaConsultaCampeonato(${c.id})"
+                                class="flex-1 py-2.5 px-3 rounded-xl bg-primary hover:bg-primary-container text-on-primary font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-sm">
+                                <span class="material-symbols-outlined text-[18px]">receipt_long</span>
+                                <span>Ver Inscrição / Pix</span>
+                            </button>
+                            <button type="button" onclick="irParaResultadosCampeonato(${c.id})"
+                                class="py-2.5 px-3 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface font-semibold text-xs transition-colors flex items-center justify-center gap-1">
+                                <span class="material-symbols-outlined text-[18px] text-amber-600">live_tv</span>
+                                <span>Resultados</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 3. Preencher Selects
+        function preencherSelectsCampeonato() {
+            const selectConsulta = document.getElementById('select-campeonato-consulta');
+            const selectResultados = document.getElementById('select-campeonato-resultados');
+
+            const options = campeonatosData.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+
+            if (selectConsulta) selectConsulta.innerHTML = options;
+            if (selectResultados) selectResultados.innerHTML = options;
+        }
+
+        // 4. Ir direto para consulta
+        function irParaConsultaCampeonato(id) {
+            selecionarAba('consulta');
+            const select = document.getElementById('select-campeonato-consulta');
+            if (select) {
+                select.value = id;
+                carregarAtletasDoCampeonato();
+            }
+        }
+
+        // 5. Ir direto para resultados
+        function irParaResultadosCampeonato(id) {
+            selecionarAba('resultados');
+            const select = document.getElementById('select-campeonato-resultados');
+            if (select) {
+                select.value = id;
+                renderizarResultados();
+            }
+        }
+
+        // 6. Carregar Atletas do Campeonato Selecionado
+        async function carregarAtletasDoCampeonato() {
+            const select = document.getElementById('select-campeonato-consulta');
+            const id = select ? select.value : null;
+            if (!id) return;
+
+            campeonatoAtivo = campeonatosData.find(c => c.id == id);
+            const container = document.getElementById('container-atletas-consulta');
+            container.innerHTML = `
+                <div class="py-12 text-center text-on-surface-variant">
+                    <div class="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-2"></div>
+                    <p class="text-xs">Carregando atletas inscritos no campeonato...</p>
+                </div>
+            `;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('campeonato_atletas')
+                    .select('*, alunos(id, nome, foto_url, categoria, nome_responsavel, telefone)')
+                    .eq('campeonato_id', id);
+
+                if (error) throw error;
+                atletasDoCampeonato = data || [];
+                filtrarAtletasConsulta();
+            } catch (err) {
+                console.error('Erro ao buscar atletas do campeonato:', err);
+                container.innerHTML = `
+                    <div class="p-6 bg-red-50 text-red-700 rounded-2xl text-center text-xs">
+                        Não foi possível carregar os atletas deste torneio.
+                    </div>
+                `;
+            }
+        }
+
+        // 7. Filtrar e Renderizar Atletas da Consulta
+        function filtrarAtletasConsulta() {
+            const container = document.getElementById('container-atletas-consulta');
+            const query = (document.getElementById('inp-busca-atleta')?.value || '').toLowerCase().trim();
+
+            let filtrados = atletasDoCampeonato;
+            if (query) {
+                filtrados = atletasDoCampeonato.filter(item => {
+                    const nome = (item.alunos?.nome || '').toLowerCase();
+                    const cat = (item.subcategoria || item.alunos?.categoria || '').toLowerCase();
+                    const resp = (item.alunos?.nome_responsavel || '').toLowerCase();
+                    return nome.includes(query) || cat.includes(query) || resp.includes(query);
+                });
+            }
+
+            if (filtrados.length === 0) {
+                container.innerHTML = `
+                    <div class="p-8 text-center text-on-surface-variant bg-surface-container-low rounded-2xl border border-outline-variant/30 text-xs">
+                        Nenhum atleta localizado para a busca informada.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    ${filtrados.map(item => {
+                        const atleta = item.alunos || {};
+                        const isPago = item.pago === 'sim';
+                        const temComprovante = !!item.comprovante_url;
+
+                        let statusBadge = isPago
+                            ? `<span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                   <span class="material-symbols-outlined text-[15px]">check_circle</span> Quitado / Pago
+                               </span>`
+                            : temComprovante
+                                ? `<span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-300">
+                                       <span class="material-symbols-outlined text-[15px]">schedule</span> Comprovante em Análise
+                                   </span>`
+                                : `<span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                                       <span class="material-symbols-outlined text-[15px]">warning</span> Pagamento Pendente
+                                   </span>`;
+
+                        return `
+                            <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/40 p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between gap-4">
+                                <div class="flex items-start gap-3.5">
+                                    <div class="w-12 h-12 rounded-full overflow-hidden bg-primary-fixed flex items-center justify-center text-primary font-bold text-sm flex-shrink-0">
+                                        ${atleta.foto_url
+                                            ? `<img src="${atleta.foto_url}" alt="${atleta.nome}" class="w-full h-full object-cover">`
+                                            : (atleta.nome ? atleta.nome.slice(0, 2).toUpperCase() : 'AT')}
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <h4 class="font-headline font-bold text-base text-on-surface truncate">${atleta.nome || 'Atleta'}</h4>
+                                        </div>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            <span class="px-2 py-0.5 rounded-md bg-surface-container text-primary font-bold text-[11px]">
+                                                ${item.subcategoria || atleta.categoria || 'Geral'}
+                                            </span>
+                                            <span class="text-xs text-on-surface-variant truncate">
+                                                Resp: <strong>${atleta.nome_responsavel || 'Não informado'}</strong>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="pt-3 border-t border-outline-variant/20 flex items-center justify-between gap-3">
+                                    <div>${statusBadge}</div>
+                                    ${!isPago ? `
+                                        <button type="button" onclick="abrirModalComprovante(${item.campeonato_id}, ${item.aluno_id}, '${(atleta.nome || '').replace(/'/g, "\\'")}', '${item.subcategoria || atleta.categoria}')"
+                                            class="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition-colors flex items-center gap-1 shadow-sm">
+                                            <span class="material-symbols-outlined text-[16px]">upload_file</span>
+                                            <span>${temComprovante ? 'Reenviar Pix' : 'Pagar / Enviar Pix'}</span>
+                                        </button>
+                                    ` : `
+                                        <span class="text-xs text-emerald-700 font-semibold flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-[16px]">verified</span> Confirmado
+                                        </span>
+                                    `}
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        // 8. Modal de Comprovante
+        function abrirModalComprovante(campId, alunoId, nomeAtleta, subcat) {
+            document.getElementById('modal-campeonato-id').value = campId;
+            document.getElementById('modal-aluno-id').value = alunoId;
+            document.getElementById('modal-atleta-subtitulo').textContent = `Atleta: ${nomeAtleta} (${subcat})`;
+
+            const camp = campeonatosData.find(c => c.id == campId);
+            const valor = (camp && camp.valor_inscricao)
+                ? Number(camp.valor_inscricao).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                : 'R$ 50,00';
+            document.getElementById('modal-valor-taxa').textContent = `Taxa: ${valor}`;
+
+            arquivoComprovanteSelecionado = null;
+            document.getElementById('nome-arquivo-selecionado').textContent = 'Clique para selecionar foto ou comprovante';
+            document.getElementById('preview-comprovante-img').classList.add('hidden');
+            document.getElementById('input-texto-comprovante').value = '';
+
+            document.getElementById('modal-comprovante').classList.remove('hidden');
+        }
+
+        function fecharModalComprovante() {
+            document.getElementById('modal-comprovante').classList.add('hidden');
+        }
+
+        function copiarPix() {
+            const chave = document.getElementById('chave-pix-texto').textContent;
+            navigator.clipboard.writeText(chave).then(() => {
+                const btn = document.getElementById('btn-copiar-pix');
+                btn.innerHTML = '<span class="material-symbols-outlined text-[16px]">check</span> Copiado!';
+                btn.classList.add('bg-emerald-600');
+                setTimeout(() => {
+                    btn.innerHTML = '<span class="material-symbols-outlined text-[16px]">content_copy</span> Copiar Pix';
+                    btn.classList.remove('bg-emerald-600');
+                }, 2000);
+            });
+        }
+
+        function handleArquivoComprovante(input) {
+            if (!input.files || !input.files[0]) return;
+            const file = input.files[0];
+            if (file.size > 5 * 1024 * 1024) {
+                alert('O arquivo deve ter no máximo 5MB.');
+                input.value = '';
+                return;
+            }
+            arquivoComprovanteSelecionado = file;
+            document.getElementById('nome-arquivo-selecionado').textContent = file.name;
+
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('img-preview-tag').src = e.target.result;
+                    document.getElementById('preview-comprovante-img').classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                document.getElementById('preview-comprovante-img').classList.add('hidden');
+            }
+        }
+
+        async function enviarComprovante(e) {
+            e.preventDefault();
+            const campId = document.getElementById('modal-campeonato-id').value;
+            const alunoId = document.getElementById('modal-aluno-id').value;
+            const codigoPix = document.getElementById('input-texto-comprovante').value.trim();
+
+            if (!arquivoComprovanteSelecionado && !codigoPix) {
+                alert('Por favor, selecione um arquivo de comprovante ou informe o código da transação Pix.');
+                return;
+            }
+
+            const btn = document.getElementById('btn-submit-comprovante');
+            btn.disabled = true;
+            btn.innerHTML = '<div class="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div> Enviando...';
+
+            try {
+                let comprovanteUrl = codigoPix;
+
+                if (arquivoComprovanteSelecionado) {
+                    const ext = arquivoComprovanteSelecionado.name.split('.').pop().toLowerCase();
+                    const path = `comprovantes/${campId}_${alunoId}_${Date.now()}.${ext}`;
+
+                    const { data: uploadData, error: uploadErr } = await supabaseClient.storage
+                        .from('arquivos')
+                        .upload(path, arquivoComprovanteSelecionado, { cacheControl: '3600', upsert: true });
+
+                    if (!uploadErr && uploadData) {
+                        const { data: urlData } = supabaseClient.storage
+                            .from('arquivos')
+                            .getPublicUrl(uploadData.path);
+                        comprovanteUrl = urlData.publicUrl;
+                    }
+                }
+
+                // Atualizar tabela campeonato_atletas
+                const { error: updateErr } = await supabaseClient
+                    .from('campeonato_atletas')
+                    .update({
+                        comprovante_url: comprovanteUrl
+                    })
+                    .eq('campeonato_id', campId)
+                    .eq('aluno_id', alunoId);
+
+                if (updateErr) throw updateErr;
+
+                alert('Comprovante enviado com sucesso! A administração do INEC & NEC fará a verificação.');
+                fecharModalComprovante();
+                await carregarAtletasDoCampeonato();
+            } catch (err) {
+                console.error('Erro ao enviar comprovante:', err);
+                alert('Erro ao enviar comprovante. Tente novamente ou envie pelo canal de WhatsApp.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<span class="material-symbols-outlined text-[18px]">send</span> <span>Enviar Comprovante</span>';
+            }
+        }
+
+        // 9. Renderizar Resultados e Jogos
+        function renderizarResultados() {
+            const select = document.getElementById('select-campeonato-resultados');
+            const id = select ? select.value : null;
+            if (!id) return;
+
+            const camp = campeonatosData.find(c => c.id == id);
+            const container = document.getElementById('container-resultados-jogos');
+            if (!camp || !camp.competicao || !camp.competicao.partidas || camp.competicao.partidas.length === 0) {
+                container.innerHTML = `
+                    <div class="py-16 text-center text-on-surface-variant bg-surface-container-low rounded-3xl border border-outline-variant/30">
+                        <span class="material-symbols-outlined text-[48px] text-outline mb-2">sports_soccer</span>
+                        <p class="font-bold text-base text-on-surface">Nenhuma partida registrada para este torneio</p>
+                        <p class="text-xs text-on-surface-variant mt-1">Os confrontos e resultados serão lançados assim que a rodada for iniciada.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const partidas = camp.competicao.partidas;
+            container.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    ${partidas.map(p => {
+                        const finalizada = p.status === 'finalizado';
+                        return `
+                            <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/40 p-5 shadow-sm space-y-3">
+                                <div class="flex items-center justify-between text-xs text-on-surface-variant">
+                                    <span class="px-2 py-0.5 rounded-md bg-surface-container text-primary font-bold">
+                                        ${p.categoria || 'Geral'} • Rodada ${p.rodada || 1}
+                                    </span>
+                                    <span class="font-bold ${finalizada ? 'text-emerald-700' : 'text-amber-700'}">
+                                        ${finalizada ? 'Finalizado' : 'Em Andamento'}
+                                    </span>
+                                </div>
+                                <div class="flex items-center justify-between gap-4 py-2">
+                                    <div class="flex-1 font-headline font-bold text-sm text-right text-on-surface truncate">
+                                        ${p.nomeA || 'Time A'}
+                                    </div>
+                                    <div class="px-3.5 py-1.5 rounded-xl bg-surface-container-high font-mono font-black text-base text-primary">
+                                        ${p.golsA ?? 0} x ${p.golsB ?? 0}
+                                    </div>
+                                    <div class="flex-1 font-headline font-bold text-sm text-left text-on-surface truncate">
+                                        ${p.nomeB || 'Time B'}
+                                    </div>
+                                </div>
+                                ${p.observacoes ? `
+                                    <p class="text-[11px] text-on-surface-variant bg-surface-container-low p-2 rounded-lg border border-outline-variant/20 italic">
+                                        ${p.observacoes}
+                                    </p>
+                                ` : ''}
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+    </script>
+</body>
+
+</html>

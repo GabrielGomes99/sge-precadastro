@@ -632,6 +632,10 @@ function initModalSelecaoTipo() {
 }
 
 function confirmarSelecaoTipo(tipo) {
+    if (tipo === 'campeonatos') {
+        window.location.href = 'campeonatos.html';
+        return;
+    }
     tipoCadastro = tipo;
     const overlay = document.getElementById('modal-selecao-tipo');
     if (overlay) overlay.classList.add('hidden');
