@@ -243,8 +243,8 @@
                                 <span class="material-symbols-outlined text-[20px]">groups</span>
                                 <span class="text-xs font-bold uppercase tracking-wider">Categorias</span>
                             </div>
-                            <div class="text-2xl sm:text-3xl font-black font-headline">Sub-7 ao Sub-20</div>
-                            <div class="text-[11px] text-white/75 mt-0.5">Faixas etárias ativas</div>
+                            <div class="text-2xl sm:text-3xl font-black font-headline" id="kpi-categorias-total">8</div>
+                            <div class="text-[11px] text-white/75 mt-0.5 truncate" id="kpi-categorias-desc" title="Sub-7 ao Sub-20 (Faixas etárias)">Sub-7 ao Sub-20</div>
                         </div>
 
                         <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/15">
@@ -552,12 +552,30 @@
                 // Atualizar KPIs
                 document.getElementById('kpi-campeonatos-total').textContent = campeonatosData.length;
                 let totalPartidas = 0;
+                const todasSubcats = new Set();
                 campeonatosData.forEach(c => {
                     if (c.competicao && c.competicao.partidas) {
                         totalPartidas += c.competicao.partidas.length;
                     }
+                    if (Array.isArray(c.subcategorias)) {
+                        c.subcategorias.forEach(s => todasSubcats.add(s));
+                    }
                 });
                 document.getElementById('kpi-partidas-total').textContent = totalPartidas;
+
+                const kpiCatTotal = document.getElementById('kpi-categorias-total');
+                const kpiCatDesc = document.getElementById('kpi-categorias-desc');
+                if (kpiCatTotal) {
+                    kpiCatTotal.textContent = todasSubcats.size > 0 ? todasSubcats.size : '8';
+                }
+                if (kpiCatDesc) {
+                    if (todasSubcats.size > 0) {
+                        const lista = Array.from(todasSubcats);
+                        kpiCatDesc.textContent = lista.length === 1 ? lista[0] : `${lista[0]} ao ${lista[lista.length - 1]}`;
+                    } else {
+                        kpiCatDesc.textContent = 'Sub-7 ao Sub-20';
+                    }
+                }
 
                 // Contar Atletas
                 const { count } = await supabaseClient
