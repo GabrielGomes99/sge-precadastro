@@ -448,19 +448,26 @@ async function uploadFileToStorage(file, folder) {
             });
 
         if (error) {
-            console.error('Upload error:', error);
-            return null;
+            throw error;
         }
+        if (!data || !data.path) throw new Error('Upload sem caminho do arquivo');
 
         const { data: urlData } = supabaseClient.storage
             .from('arquivos')
             .getPublicUrl(data.path);
 
+        if (!urlData || !urlData.publicUrl) throw new Error('Upload sem URL do arquivo');
         return urlData.publicUrl;
     } catch (err) {
         console.error('Upload exception:', err);
-        return null;
+        throw new Error(`Não foi possível enviar o arquivo "${file.name}". Verifique sua conexão e tente novamente.`);
     }
+}
+
+function getExistingUploadUrl(inputId) {
+    const input = document.getElementById(inputId);
+    const link = input && input.parentElement.querySelector('.upload-preview a');
+    return link ? link.getAttribute('href') : null;
 }
 
 // ==================== FORM SUBMIT ====================
@@ -478,10 +485,11 @@ async function enviarPreCadastro() {
     try {
         // Upload files
         const [fotoUrl, docAlunoUrl, docRespUrl] = await Promise.all([
-            uploadFileToStorage(fotoFile, 'fotos'),
-            uploadFileToStorage(docAlunoFile, 'documentos'),
-            uploadFileToStorage(docRespFile, 'documentos')
+            fotoFile ? uploadFileToStorage(fotoFile, 'fotos') : getExistingUploadUrl('inp-foto'),
+            docAlunoFile ? uploadFileToStorage(docAlunoFile, 'documentos') : getExistingUploadUrl('inp-doc-aluno'),
+            docRespFile ? uploadFileToStorage(docRespFile, 'documentos') : getExistingUploadUrl('inp-doc-resp')
         ]);
+        if (!fotoUrl) throw new Error('Selecione e envie a foto do atleta antes de concluir o cadastro.');
 
         const dataNasc = getVal('inp-data-nasc');
         const idade = calculateAge(dataNasc);
@@ -548,7 +556,7 @@ async function enviarPreCadastro() {
 
     } catch (err) {
         console.error('Submit exception:', err);
-        showToast('Erro inesperado. Verifique sua conexão e tente novamente.', 'error');
+        showToast(err instanceof Error ? err.message : 'Erro inesperado. Verifique sua conexão e tente novamente.', 'error');
         showLoading(false);
     }
 }
@@ -1510,6 +1518,7 @@ async function enviarPreCadastroInstrutor() {
             uploadFileToStorage(fotoFileInstr, 'instrutores/fotos'),
             uploadFileToStorage(docInstrFile, 'instrutores/documentos'),
         ]);
+        if (!fotoUrl) throw new Error('Selecione e envie a foto do instrutor antes de concluir o cadastro.');
 
         const dataNasc = getVal('inp-data-nasc-instr');
         const idade = calculateAge(dataNasc);
@@ -1564,7 +1573,7 @@ async function enviarPreCadastroInstrutor() {
 
     } catch (err) {
         console.error('Erro ao enviar pré-cadastro de instrutor:', err);
-        showToast('Erro ao enviar pré-cadastro. Tente novamente.', 'error');
+        showToast(err instanceof Error ? err.message : 'Erro ao enviar pré-cadastro. Tente novamente.', 'error');
     } finally {
         showLoading(false);
     }
